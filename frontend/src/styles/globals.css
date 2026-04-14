@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+/* ══════════════════════════════════════════════
+   ダークテーマ（デフォルト）
+══════════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  --bg:           #0a0a0f;
+  --bg-panel:     #0f0f18;
+  --bg-card:      #12121e;
+  --border:       #2a2a4a;
+  --border-dim:   #1a1a2e;
+  --text:         #c8c8e8;
+  --text-dim:     #5a5a8a;
+  --text-muted:   #3a3a5a;
+  --accent:       #7b6fff;
+  --accent2:      #ff6fd8;
+  --accent3:      #6fffd4;
+  --danger:       #ff4f6d;
+  --danger-bg:    rgba(255,79,109,0.06);
+  --danger-border:rgba(255,79,109,0.45);
+  --btn-bg:       rgba(123,111,255,0.05);
+  --btn-hover:    rgba(123,111,255,0.08);
+  --scan-opacity: 0.15;
+  --font-main:    'Share Tech Mono', monospace;
+  --font-title:   'VT323', monospace;
+}
+
+/* ══════════════════════════════════════════════
+   ライトテーマ（古いインターネット / Win98風）
+══════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:           #d4e8f0;
+  --bg-panel:     #c2dcea;
+  --bg-card:      #e8f4f8;
+  --border:       #5ba3c9;
+  --border-dim:   #8ec4d8;
+  --text:         #003366;
+  --text-dim:     #336699;
+  --text-muted:   #6699bb;
+  --accent:       #0055cc;
+  --accent2:      #cc0077;
+  --accent3:      #007755;
+  --danger:       #cc2200;
+  --danger-bg:    rgba(204,34,0,0.06);
+  --danger-border:rgba(204,34,0,0.4);
+  --btn-bg:       rgba(0,85,204,0.06);
+  --btn-hover:    rgba(0,85,204,0.12);
+  --scan-opacity: 0;
+  --font-main:    'Share Tech Mono', monospace;
+  --font-title:   'VT323', monospace;
+}
+
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: 14px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── CRT scanline（ダーク時のみ表示） ─────────────── */
+#crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+#crt-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 27px,
+    rgba(0,0,0,var(--scan-opacity)) 28px
+  );
+  animation: scanroll 10s linear infinite;
+}
+#crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center,
+    transparent 60%, rgba(0,0,0,calc(var(--scan-opacity) * 4)) 100%);
+}
+@keyframes scanroll {
+  from { background-position: 0 0; }
+  to   { background-position: 0 560px; }
+}
+
+
+/* ── グリッチ（ダーク時のみ効果的） ────────────── */
+@keyframes glitch {
+  0%   { clip-path: inset(40% 0 61% 0); transform: translate(-2px,0); }
+  20%  { clip-path: inset(92% 0 1%  0); transform: translate( 2px,0); }
+  40%  { clip-path: inset(43% 0 1%  0); transform: translate( 1px,0); }
+  60%  { clip-path: inset(25% 0 58% 0); transform: translate(-1px,0); }
+  80%  { clip-path: inset(54% 0 7%  0); transform: translate( 2px,0); }
+  100% { clip-path: inset(58% 0 43% 0); transform: translate(-2px,0); }
+}
+.glitch { position: relative; }
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0; width: 100%;
+  pointer-events: none;
+}
+[data-theme="dark"] .glitch::before {
+  color: var(--accent2);
+  animation: glitch 3s infinite linear alternate-reverse;
+  opacity: 0.5;
+}
+[data-theme="dark"] .glitch::after {
+  color: var(--accent3);
+  animation: glitch 2s infinite linear alternate;
+  opacity: 0.4;
+}
+[data-theme="light"] .glitch::before {
+  color: var(--accent2);
+  animation: glitch 4s infinite linear alternate-reverse;
+  opacity: 0.3;
+}
+[data-theme="light"] .glitch::after {
+  color: var(--accent);
+  animation: glitch 2.5s infinite linear alternate;
+  opacity: 0.25;
+}
+
+/* ── カーソル点滅 ─────────────────────────────── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+/* ── フェードアップ ───────────────────────────── */
+@keyframes fadeup {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.fadeup { animation: fadeup 0.35s ease forwards; }
+
+/* ── 画面ちらつき：CRTオーバーレイに直接定義（クラス不要） ── */
+/* ダークテーマ時のみ、crt-overlay自体がちらつく           */
+@keyframes flicker {
+  0%,95%,100% { opacity:1; }
+  96%          { opacity:0.88; }
+  97%          { opacity:1; }
+  98%          { opacity:0.92; }
+}
+[data-theme="dark"] #crt-overlay {
+  animation: flicker 7s infinite;
+}
+[data-theme="light"] #crt-overlay {
+  animation: none;
+}
+
+
+/* ── ライトテーマ：レトロWeb追加装飾 ─────────── */
+[data-theme="light"] body {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(91,163,201,0.07) 3px,
+      rgba(91,163,201,0.07) 4px
+    );
+}
+
+/* ── 共通ボタン ───────────────────────────────── */
+button { font-family: var(--font-main); cursor: pointer; border: none; background: none; }
+
+/* ── スクロールバー ───────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── ライトテーマ スクロールバー ─────────────── */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ── 区切り線 ─────────────────────────────────── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border-dim);
+  margin: 12px 0;
+}
+
+/* ── テーマ切り替えボタン ─────────────────────── */
+.theme-toggle {
+  font-family: var(--font-main);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-app-region: no-drag;
+}
+.theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}

@@ -1,0 +1,41 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+}
+.svg {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  display: block;
+  background: var(--bg);
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.metaRow {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+.metaKey {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  width: 46px;
+  flex-shrink: 0;
+}
+.metaVal {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}

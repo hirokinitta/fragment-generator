@@ -1,0 +1,103 @@
+.wrap {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.18em; }
+.note  { font-size: 10px; color: var(--text-muted); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.fieldLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+}
+
+/* カテゴリボタン */
+.categories { display: flex; flex-wrap: wrap; gap: 5px; }
+.catBtn {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 5px 10px;
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.catBtn:hover { border-color: var(--border); color: var(--text); }
+.catBtnActive {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: var(--btn-bg) !important;
+}
+
+/* 入力フィールド */
+.input, .textarea {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  resize: vertical;
+}
+.input:focus, .textarea:focus { border-color: var(--accent); }
+.input::placeholder, .textarea::placeholder { color: var(--text-muted); }
+
+.charCount {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--danger);
+  padding: 6px 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  background: var(--danger-bg);
+}
+
+.submitBtn {
+  padding: 12px;
+  font-family: var(--font-title);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: var(--accent3);
+  border: 1px solid var(--accent3);
+  border-radius: 3px;
+  background: rgba(111,255,212,0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.submitBtn:hover:not(:disabled) { background: rgba(111,255,212,0.1); }
+.submitBtn:disabled { opacity: 0.7; cursor: default; }
+.submitSent {
+  color: var(--accent3) !important;
+  border-color: var(--accent3) !important;
+}
+
+.sentNote {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  padding: 8px 10px;
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  background: var(--bg-card);
+}

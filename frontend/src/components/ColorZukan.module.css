@@ -1,0 +1,91 @@
+.wrap {
+  padding: 14px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.title { font-size: 10px; color: var(--text-muted); letter-spacing: 0.18em; }
+.count { font-size: 10px; color: var(--text-muted); }
+
+/* ── カテゴリフィルター ──────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.filterBtn {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filterBtn:hover { color: var(--text-dim); border-color: var(--border); }
+.filterActive {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: var(--btn-bg) !important;
+}
+
+/* ── カテゴリブロック ────────────────────────── */
+.category { display: flex; flex-direction: column; gap: 8px; }
+.categoryLabel {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  border-left: 2px solid var(--accent);
+  padding-left: 7px;
+}
+
+/* ── グリッド ────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.card {
+  border: 1px solid var(--border-dim);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-card);
+  transition: border-color 0.15s, transform 0.12s;
+  cursor: default;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.swatch {
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px 6px;
+}
+.hex {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: rgba(0,0,0,0.5);
+  letter-spacing: 0.08em;
+}
+.hexLight { color: rgba(255,255,255,0.65); }
+.info {
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.name { font-size: 11px; color: var(--text); }
+.desc { font-size: 10px; color: var(--text-dim); line-height: 1.45; }

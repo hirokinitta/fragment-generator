@@ -1,0 +1,247 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  flex: 1;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  min-width: 0;
+}
+
+/* タブレット（〜900px）：右HistoryパネルをHISTタブに退避 */
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 180px 1fr;
+  }
+  .right { display: none; }
+}
+
+/* スマホ（〜600px）：左パネルも非表示→タブで全操作 */
+@media (max-width: 600px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+  .left  { display: none; }
+  .right { display: none; }
+}
+
+.left {
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.center {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.right {
+  border-left: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.error {
+  margin: 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  background: var(--danger-bg);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.errorLabel {
+  color: var(--danger);
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0.35;
+}
+
+.emptyTitle {
+  font-family: var(--font-title);
+  font-size: 36px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+.emptyHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  height: 26px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+
+.footerDot { color: var(--border); }
+
+/* ── タブバー ────────────────────────────────── */
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-panel);
+}
+.tabBtn {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  padding: 8px 18px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.12s;
+  background: none;
+}
+.tabBtn:hover { color: var(--text-dim); }
+.tabBtnActive {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+.tabContent {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── スマホ用フローティングボタン ────────────── */
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--bg-panel);
+  color: var(--accent);
+  font-size: 22px;
+  z-index: 1000;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(123,111,255,0.3);
+}
+.fab:active { transform: scale(0.92); }
+.fabGenerating {
+  border-color: var(--accent3) !important;
+  color: var(--accent3) !important;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .fab { display: flex; align-items: center; justify-content: center; }
+}
+
+/* GENタブはスマホ時のみ表示 */
+.tabMobileOnly { display: none; }
+@media (max-width: 600px) {
+  .tabMobileOnly { display: block; }
+  /* スマホ：タブのpadding狭く */
+  .tabBtn { padding: 8px 12px; font-size: 9px; }
+}
+@media (max-width: 900px) {
+  /* タブレット：左パネル非表示時もGENタブ不要（FABで代替） */
+}
+
+/* ── グリッチギミック ─────────────────────────────────── */
+@keyframes glitchShift {
+  0%   { transform: translate(0); }
+  10%  { transform: translate(-3px, 1px); }
+  20%  { transform: translate(3px, -1px); }
+  30%  { transform: translate(-1px, 2px); }
+  40%  { transform: translate(2px, -2px); }
+  50%  { transform: translate(-2px, 1px); }
+  60%  { transform: translate(1px, 3px); }
+  70%  { transform: translate(-3px, -1px); }
+  80%  { transform: translate(2px, 1px); }
+  90%  { transform: translate(-1px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitchColor {
+  0%, 88%, 100% { filter: none; }
+  90%  { filter: hue-rotate(90deg) saturate(3); }
+  92%  { filter: invert(0.1) hue-rotate(-60deg); }
+  94%  { filter: hue-rotate(180deg) saturate(2); }
+  96%  { filter: none; }
+}
+
+@keyframes scanlineShift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* レベル1：どれかが70以上 — animation-name を明示して上書きを確実にする */
+.glitchHigh {
+  animation-name: glitchColor;
+  animation-duration: 4s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+/* レベル2：全パラメータ90以上 */
+.glitchMax {
+  animation-name: glitchShift, glitchColor;
+  animation-duration: 0.15s, 0.8s;
+  animation-iteration-count: infinite, infinite;
+  animation-timing-function: linear, linear;
+}
+
+/* グリッチなし（level 0）— アニメーションを完全にリセット */
+.glitchNone {
+  animation-name: none !important;
+  animation-duration: 0s !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+/* CRTオーバーレイ：グリッチMAX時はflickerを上書きして停止 */
+#crt-overlay.glitchMax {
+  animation-name: none !important;
+}
+#crt-overlay.glitchNone {
+  /* 何もしない：globals.cssのdark/light定義に委ねる */
+}
+
+.footerWarning {
+  margin-left: auto;
+  color: var(--danger);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  animation: blink 0.5s step-end infinite;
+}

@@ -1,0 +1,370 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-main);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  flex: 1;
+}
+
+.bracket {
+  color: var(--accent);
+  margin: 0 3px;
+}
+
+/* アップデートバナー */
+.updateBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(123, 111, 255, 0.12);
+  border: 1px solid rgba(123, 111, 255, 0.4);
+  border-radius: 3px;
+  padding: 2px 8px;
+  margin-right: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.updateText {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+
+.updateAccept {
+  font-size: 10px;
+  color: var(--accent3);
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border: 1px solid var(--accent3);
+  border-radius: 2px;
+  background: rgba(111, 255, 212, 0.08);
+  transition: background 0.15s;
+}
+.updateAccept:hover { background: rgba(111, 255, 212, 0.18); }
+
+.updateDismiss {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+.updateDismiss:hover { color: var(--text-dim); }
+
+/* ウィンドウコントロール */
+.winControls {
+  display: flex;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.winBtn {
+  width: 28px;
+  height: 22px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-radius: 2px;
+  transition: background 0.1s, color 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.winBtn:hover { background: var(--border-dim); color: var(--text); }
+.winClose:hover { background: rgba(255, 79, 109, 0.2); color: var(--danger); }
+
+/* ── ベルボタン ──────────────────────────────── */
+.bellWrap {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+.bellBtn {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+  background: none;
+  cursor: pointer;
+}
+.bellBtn:hover {
+  color: var(--accent);
+  background: var(--btn-bg);
+}
+
+.bellBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent2);
+  color: #fff;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-main);
+  pointer-events: none;
+}
+
+/* ── お知らせパネル ───────────────────────────── */
+.noticePanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.noticePanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-dim);
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+}
+
+.noticePanelTitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+}
+
+.noticePanelClose {
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none;
+}
+.noticePanelClose:hover { color: var(--text); }
+
+.noticeEmpty {
+  padding: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.noticeItem {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-dim);
+  transition: background 0.1s;
+}
+.noticeItem:last-child { border-bottom: none; }
+.noticeItem:hover { background: rgba(255,255,255,0.02); }
+
+.noticeUnread { border-left: 2px solid var(--accent2); }
+.noticeRead   { border-left: 2px solid transparent; }
+
+.noticeItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.noticeItemTitle {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.noticeItemDate {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.noticeItemBody {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ── アップデートモーダル ────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  width: 380px;
+  background: var(--bg-panel);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(123,111,255,0.25);
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-card);
+}
+
+.modalTitle {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+}
+
+.modalBody {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalVersionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-title);
+  font-size: 24px;
+}
+
+.modalVerOld  { color: var(--text-muted); }
+.modalArrow   { color: var(--text-muted); font-size: 18px; }
+.modalVerNew  { color: var(--accent3); }
+
+.modalNotes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+}
+
+.modalNotesLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+}
+
+.modalNotesBody {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* 進捗バー */
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  background: var(--border-dim);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent3);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progressLabel {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.modalError {
+  font-size: 12px;
+  color: var(--danger);
+  padding: 8px 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  background: var(--danger-bg);
+}
+
+/* ボタン */
+.modalFooter {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-dim);
+  justify-content: flex-end;
+}
+
+.modalCancel {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.modalCancel:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+.modalCancel:disabled { opacity: 0.4; cursor: default; }
+
+.modalOk {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--accent3);
+  padding: 7px 18px;
+  border: 1px solid var(--accent3);
+  border-radius: 3px;
+  background: rgba(111,255,212,0.07);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.modalOk:hover { background: rgba(111,255,212,0.14); }
+
+/* アップデート通知の強調 */
+.noticeUpdate {
+  background: rgba(123,111,255,0.04);
+}
+.noticeUpdate:hover {
+  background: rgba(123,111,255,0.08);
+}
+
+.noticeCta {
+  color: var(--accent);
+  font-size: 10px;
+}

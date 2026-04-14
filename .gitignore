@@ -1,0 +1,35 @@
+# ── Node.js ──────────────────────────────────────────
+node_modules/
+npm-debug.log*
+
+# ── Next.js ──────────────────────────────────────────
+frontend/.next/
+frontend/out/
+
+# ── Go ───────────────────────────────────────────────
+backend.exe
+*.exe
+!assets/*.ico
+
+# ── SQLite ───────────────────────────────────────────
+backend/fragments.db
+backend/fragments.db-shm
+backend/fragments.db-wal
+
+# ── Electron ビルド成果物 ─────────────────────────────
+dist/
+dist-electron/
+
+# ── 一時ファイル ──────────────────────────────────────
+make-ico.js
+make-ico2.js
+*.log
+
+# ── OS ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── 環境変数（将来的にAPIキーを使う場合に備えて）──────
+.env
+.env.local
+.env.production

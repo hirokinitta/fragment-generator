@@ -1,0 +1,98 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  gap: 14px;
+}
+
+.header { padding-bottom: 4px; }
+.sysLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.2em;
+}
+
+/* ── 生成ボタン ─────────────────────────────── */
+.generateBtn {
+  width: 100%;
+  padding: 14px;
+  font-family: var(--font-title);
+  font-size: 20px;
+  /* letter-spacing: 0.15em; */
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--btn-bg);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.generateBtn:hover:not(:disabled) { background: var(--btn-hover); box-shadow: 0 0 14px rgba(0,0,0,0.1); }
+.generateBtn:active:not(:disabled) { transform: scale(0.98); }
+.generateBtn:disabled { opacity: 0.7; cursor: default; }
+.generating { border-color: var(--accent3) !important; color: var(--accent3) !important; }
+.loadingText { font-size: 16px; letter-spacing: 0.2em; }
+
+.divider { height: 1px; background: var(--border-dim); }
+
+/* ── モード切り替え ──────────────────────────── */
+.modeRow { display: flex; gap: 6px; }
+.modeBtn {
+  flex: 1;
+  padding: 6px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: none;
+  transition: all 0.15s;
+}
+.modeBtn:hover { color: var(--text-dim); }
+.modeBtnActive {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: var(--btn-bg) !important;
+}
+
+/* ── スライダー群 ─────────────────────────────── */
+.sliders { display: flex; flex-direction: column; gap: 16px; transition: opacity 0.2s; }
+.slidersDisabled { opacity: 0.35; pointer-events: none; }
+.sliderRow {}
+.sliderRowDisabled { opacity: 0.6; }
+.sliderHeader { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.sliderLabel { font-size: 10px; color: var(--text-muted); letter-spacing: 0.15em; }
+.sliderValue  { font-size: 11px; letter-spacing: 0.05em; font-weight: 500; }
+
+.sliderInput {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+.sliderInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--thumb-color, var(--accent));
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.sliderInput::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ── ステータス ──────────────────────────────── */
+.status { margin-top: auto; display: flex; align-items: center; gap: 6px; }
+.statusDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent3);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.6; }
+}
+.statusText { font-size: 10px; color: var(--text-muted); letter-spacing: 0.2em; }

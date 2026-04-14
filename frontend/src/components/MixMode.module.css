@@ -1,0 +1,199 @@
+.wrap {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.18em; }
+.hint  { font-size: 10px; color: var(--text-muted); }
+
+/* ── DropZone ────────────────────────────────── */
+.dropRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.plus { color: var(--text-muted); font-size: 16px; flex-shrink: 0; }
+
+.dropZone {
+  flex: 1;
+  min-height: 80px;
+  border: 1px dashed var(--zone-color, var(--border));
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.15s, border-style 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+.dropOver {
+  background: rgba(123,111,255,0.08);
+  border-style: solid;
+  box-shadow: 0 0 0 2px var(--zone-color, var(--accent));
+}
+.dropLabel {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+.dropTitle {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.3;
+}
+.dropMeta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.dropHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: auto;
+}
+
+/* ── 警告 ────────────────────────────────────── */
+.warning {
+  font-size: 11px;
+  color: var(--danger);
+  padding: 6px 10px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  background: var(--danger-bg);
+}
+
+/* ── スロット ────────────────────────────────── */
+.slotsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.slotsLabel {
+  flex: 1;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+}
+.btn {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  padding: 3px 9px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--btn-bg);
+  transition: background 0.12s;
+  cursor: pointer;
+}
+.btn:hover { background: var(--btn-hover); }
+
+.slots { display: flex; flex-direction: column; gap: 6px; }
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slotLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  width: 64px;
+  flex-shrink: 0;
+}
+.sourceBtn {
+  width: 24px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.srcA {
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  background: rgba(123,111,255,0.1);
+}
+.srcB {
+  color: var(--accent2);
+  border: 1px solid var(--accent2);
+  background: rgba(255,111,216,0.1);
+}
+.slotValue {
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+}
+
+/* ── シーン一覧（ドラッグ元）───────────────── */
+.sceneList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-dim);
+}
+.sceneListLabel {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 2px;
+}
+.sceneChip {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  cursor: grab;
+  transition: all 0.12s;
+  user-select: none;
+}
+.sceneChip:hover {
+  border-color: var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.sceneChip:active { cursor: grabbing; }
+.sceneChipNum {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.sceneChipTitle {
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sceneChipMeta {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
