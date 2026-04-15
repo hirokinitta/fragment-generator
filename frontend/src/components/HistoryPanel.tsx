@@ -1,38 +1,58 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { Scene } from '../lib/api'
 import { fetchScenes } from '../lib/api'
 import styles from './HistoryPanel.module.css'
 
+const PAGE_SIZE = 20
+
 interface Props {
   refreshTrigger: number
-  onSelect: (scene: Scene) => void
-  selectedId?: number
-  onDragStart?: (scene: Scene) => void
+  onSelect:       (scene: Scene) => void
+  selectedId?:    number
+  onDragStart?:   (scene: Scene) => void
 }
 
-export default function HistoryPanel({ refreshTrigger, onSelect, selectedId, onDragStart }: Props) {
+export default function HistoryPanel({
+  refreshTrigger, onSelect, selectedId, onDragStart,
+}: Props) {
   const [scenes,   setScenes]   = useState<Scene[]>([])
   const [filter,   setFilter]   = useState<'all' | 'fav' | 'drawn'>('all')
   const [loading,  setLoading]  = useState(false)
+  const [hasMore,  setHasMore]  = useState(false)
+  const [offset,   setOffset]   = useState(0)
 
+  // フィルターかrefreshTriggerが変わったら先頭からリセット
   useEffect(() => {
-    load()
+    setScenes([])
+    setOffset(0)
+    loadPage(0)
   }, [refreshTrigger, filter])
 
-  const load = async () => {
+  const loadPage = useCallback(async (pageOffset: number) => {
     setLoading(true)
     try {
       const data = await fetchScenes({
-        limit:    50,
+        limit:    PAGE_SIZE + 1, // 1件多く取って「まだある」か確認
+        offset:   pageOffset,
         favorite: filter === 'fav',
       })
+
+      // drawnフィルターはクライアント側で処理
       const filtered = filter === 'drawn' ? data.filter(s => s.is_drawn) : data
-      setScenes(filtered)
+      const page     = filtered.slice(0, PAGE_SIZE)
+
+      setHasMore(filtered.length > PAGE_SIZE)
+      setScenes(prev => pageOffset === 0 ? page : [...prev, ...page])
+      setOffset(pageOffset + page.length)
     } catch (e) {
       console.error(e)
     } finally {
       setLoading(false)
     }
+  }, [filter])
+
+  const loadMore = () => {
+    if (!loading && hasMore) loadPage(offset)
   }
 
   return (
@@ -55,19 +75,17 @@ export default function HistoryPanel({ refreshTrigger, onSelect, selectedId, onD
 
       {/* リスト */}
       <div className={styles.list}>
-        {loading && (
-          <div className={styles.loading}>LOADING<span className="cursor" /></div>
-        )}
         {!loading && scenes.length === 0 && (
           <div className={styles.empty}>NO_DATA</div>
         )}
+
         {scenes.map(scene => (
           <div
             key={scene.id}
             className={`${styles.item} ${selectedId === scene.id ? styles.itemActive : ''}`}
             onClick={() => onSelect(scene)}
             draggable={!!onDragStart}
-            onDragStart={(e) => {
+            onDragStart={e => {
               e.dataTransfer.effectAllowed = 'copy'
               onDragStart?.(scene)
             }}
@@ -84,6 +102,21 @@ export default function HistoryPanel({ refreshTrigger, onSelect, selectedId, onD
             </div>
           </div>
         ))}
+
+        {/* もっと読み込む */}
+        {hasMore && (
+          <button
+            className={styles.loadMore}
+            onClick={loadMore}
+            disabled={loading}
+          >
+            {loading ? 'LOADING...' : 'LOAD MORE'}
+          </button>
+        )}
+
+        {loading && scenes.length === 0 && (
+          <div className={styles.loading}>LOADING<span className="cursor" /></div>
+        )}
       </div>
     </div>
   )

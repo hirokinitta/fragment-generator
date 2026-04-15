@@ -70,6 +70,9 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  /* GPU レイヤーに分離して他の描画に影響させない */
+  will-change: opacity;
+  contain: strict;
 }
 #crt-overlay::before {
   content: '';
@@ -81,7 +84,9 @@ html, body {
     transparent 27px,
     rgba(0,0,0,var(--scan-opacity)) 28px
   );
+  /* transform を使うことで compositor thread で処理 → メインスレッド負荷ゼロ */
   animation: scanroll 10s linear infinite;
+  will-change: transform;
 }
 #crt-overlay::after {
   content: '';
@@ -91,8 +96,8 @@ html, body {
     transparent 60%, rgba(0,0,0,calc(var(--scan-opacity) * 4)) 100%);
 }
 @keyframes scanroll {
-  from { background-position: 0 0; }
-  to   { background-position: 0 560px; }
+  from { transform: translateY(0); }
+  to   { transform: translateY(560px); }
 }
 
 

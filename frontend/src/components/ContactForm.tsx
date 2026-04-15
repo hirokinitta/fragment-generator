@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import styles from './ContactForm.module.css'
 
+// ── EmailJS 設定 ──────────────────────────────────────────────────────────────
+// EmailJS (https://www.emailjs.com/) で取得した値を設定してください
+// 無料プランで月200通まで送信可能
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID'   // ← EmailJSのService ID
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'  // ← EmailJSのTemplate ID
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY'   // ← EmailJSのPublic Key
+
 type Category = 'bug' | 'feature' | 'word' | 'other'
 
 const CATEGORIES: { id: Category; label: string }[] = [
@@ -10,111 +17,137 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'other',   label: 'その他' },
 ]
 
+// EmailJS をCDN経由で動的にロード（bundle sizeを増やさない）
+async function loadEmailJS() {
+  if ((window as any).emailjs) return (window as any).emailjs
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js'
+    script.onload  = () => resolve()
+    script.onerror = () => reject(new Error('EmailJS load failed'))
+    document.head.appendChild(script)
+  })
+  ;(window as any).emailjs.init(EMAILJS_PUBLIC_KEY)
+  return (window as any).emailjs
+}
+
 export default function ContactForm() {
   const [category, setCategory] = useState<Category>('bug')
   const [name,     setName]     = useState('')
   const [body,     setBody]     = useState('')
-  const [sent,     setSent]     = useState(false)
+  const [status,   setStatus]   = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [error,    setError]    = useState('')
 
-  // メールソフトを起動して送信する
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!body.trim()) {
       setError('内容を入力してください')
       return
     }
     setError('')
+    setStatus('sending')
 
     const catLabel = CATEGORIES.find(c => c.id === category)?.label ?? category
-    const text = [
-      `[Fragment Generator フィードバック]`,
-      `カテゴリ: ${catLabel}`,
-      name ? `名前: ${name}` : '',
-      ``,
-      body.trim(),
-    ].filter(Boolean).join('\n')
 
-    // メールソフトを起動
-    const subject = encodeURIComponent(`[Fragment Generator Feedback] ${catLabel}`)
-    const mailtoUrl = `mailto:locaminase666@gmail.com?subject=${subject}&body=${encodeURIComponent(text)}`
-    window.location.href = mailtoUrl
-
-    setSent(true)
-    setTimeout(() => setSent(false), 4000)
-    setName('')
-    setBody('')
+    try {
+      const emailjs = await loadEmailJS()
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          category: catLabel,
+          name:     name.trim() || '匿名',
+          message:  body.trim(),
+          date:     new Date().toLocaleString('ja-JP'),
+        }
+      )
+      setStatus('sent')
+      setName('')
+      setBody('')
+    } catch (e) {
+      console.error('EmailJS error:', e)
+      setStatus('error')
+      setError('送信に失敗しました。しばらく後に再試行してください。')
+    }
   }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
         <span className={styles.label}>// CONTACT</span>
-        <span className={styles.note}>
-          メールソフトを起動して送信します
-        </span>
+        <span className={styles.note}>送信先: locaminase666@gmail.com</span>
       </div>
 
-      {/* カテゴリ選択 */}
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>CATEGORY</span>
-        <div className={styles.categories}>
-          {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              className={`${styles.catBtn} ${category === c.id ? styles.catBtnActive : ''}`}
-              onClick={() => setCategory(c.id)}
-            >
-              {c.label}
-            </button>
-          ))}
+      {/* 送信完了 */}
+      {status === 'sent' && (
+        <div className={styles.sentBanner}>
+          ✓ 送信しました。フィードバックありがとうございます。
+          <button className={styles.sentReset} onClick={() => setStatus('idle')}>
+            もう一件送る
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* 名前（任意） */}
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>NAME（任意）</span>
-        <input
-          className={styles.input}
-          type="text"
-          placeholder="匿名でもOK"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          maxLength={50}
-        />
-      </div>
+      {status !== 'sent' && (
+        <>
+          {/* カテゴリ */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>CATEGORY</span>
+            <div className={styles.categories}>
+              {CATEGORIES.map(c => (
+                <button
+                  key={c.id}
+                  className={`${styles.catBtn} ${category === c.id ? styles.catBtnActive : ''}`}
+                  onClick={() => setCategory(c.id)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* 本文 */}
-      <div className={styles.field}>
-        <span className={styles.fieldLabel}>CONTENT</span>
-        <textarea
-          className={styles.textarea}
-          placeholder={
-            category === 'word'
-              ? 'ワードの種類（場所/感情/音 など）と具体的なワードを書いてください'
-              : 'できるだけ詳しく書いてください'
-          }
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          rows={6}
-          maxLength={1000}
-        />
-        <span className={styles.charCount}>{body.length} / 1000</span>
-      </div>
+          {/* 名前（任意） */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>NAME（任意）</span>
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="匿名でもOK"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              maxLength={50}
+            />
+          </div>
 
-      {error && <p className={styles.error}>{error}</p>}
+          {/* 本文 */}
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>CONTENT</span>
+            <textarea
+              className={styles.textarea}
+              placeholder={
+                category === 'word'
+                  ? 'ワードの種類（場所/感情/音など）と具体的なワードを書いてください'
+                  : 'できるだけ詳しく書いてください'
+              }
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              rows={6}
+              maxLength={1000}
+            />
+            <span className={styles.charCount}>{body.length} / 1000</span>
+          </div>
 
-      <button
-        className={`${styles.submitBtn} ${sent ? styles.submitSent : ''}`}
-        onClick={handleSubmit}
-        disabled={sent}
-      >
-        {sent ? '✓ 準備完了（メールを確認してください）' : '[ SEND FEEDBACK ]'}
-      </button>
+          {error && <p className={styles.errorMsg}>{error}</p>}
 
-      {sent && (
-        <p className={styles.sentNote}>
-          メールソフトが起動しない場合は、locaminase666@gmail.com 宛に直接送信してください。
-        </p>
+          <button
+            className={`${styles.submitBtn} ${status === 'sending' ? styles.submitSending : ''}`}
+            onClick={handleSubmit}
+            disabled={status === 'sending'}
+          >
+            {status === 'sending'
+              ? 'SENDING...'
+              : '[ SEND ]'}
+          </button>
+        </>
       )}
     </div>
   )

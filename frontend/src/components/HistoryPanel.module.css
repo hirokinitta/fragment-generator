@@ -116,3 +116,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.loadMore {
+  width: 100%;
+  padding: 8px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-top: 4px;
+}
+.loadMore:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.loadMore:disabled { opacity: 0.5; cursor: default; }

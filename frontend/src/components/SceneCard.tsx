@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Scene } from '../lib/api'
 import { toggleFavorite, toggleDrawn } from '../lib/api'
 import Typewriter from './Typewriter'
@@ -12,17 +12,16 @@ interface Props {
 
 export default function SceneCard({ scene: initialScene, onUpdate }: Props) {
   const [scene,       setScene]       = useState(initialScene)
-  const [titleDone,   setTitleDone]   = useState(false)
   const [bodyVisible, setBodyVisible] = useState(false)
 
-  // useEffect(() => {
-  //   setScene(initialScene)
-  //   setTitleDone(false)
-  //   setBodyVisible(false)
-  // }, [initialScene])
+  // initialScene が変わったとき（新規生成・履歴選択）にリセット
+  useEffect(() => {
+    setScene(initialScene)
+    setBodyVisible(false)
+  }, [initialScene.id]) // id が変わった時だけ実行（オブジェクト比較を避ける）
 
   const handleTitleDone = () => {
-    setTitleDone(true)
+    // タイプライター完了後120msでボディ表示
     setTimeout(() => setBodyVisible(true), 120)
   }
 

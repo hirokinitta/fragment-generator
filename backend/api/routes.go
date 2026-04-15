@@ -114,7 +114,14 @@ func handleFavorite(w http.ResponseWriter, r *http.Request) {
 		ID    int  `json:"id"`
 		Value bool `json:"value"`
 	}
-	json.NewDecoder(r.Body).Decode(&body)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	if body.ID <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 	db.DB.Exec(`UPDATE scenes SET is_favorite = ? WHERE id = ?`, body.Value, body.ID)
 	writeJSON(w, map[string]bool{"ok": true})
 }
@@ -129,7 +136,14 @@ func handleDrawn(w http.ResponseWriter, r *http.Request) {
 		ID    int  `json:"id"`
 		Value bool `json:"value"`
 	}
-	json.NewDecoder(r.Body).Decode(&body)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	if body.ID <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 	db.DB.Exec(`UPDATE scenes SET is_drawn = ? WHERE id = ?`, body.Value, body.ID)
 	writeJSON(w, map[string]bool{"ok": true})
 }
