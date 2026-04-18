@@ -2,7 +2,7 @@
   "name": "fragment-generator",
   "version": "0.1.0",
   "description": "記憶断片生成器",
-  "author": "yourname",
+  "author": "hirokinitta",
   "main": "app/main.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development electron .",
@@ -10,7 +10,7 @@
     "pack": "electron-builder --dir"
   },
   "build": {
-    "appId": "com.yourname.fragment-generator",
+    "appId": "com.hirokinitta.fragment-generator",
     "productName": "Fragment Generator",
     "directories": {
       "output": "dist"
