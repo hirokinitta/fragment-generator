@@ -381,3 +381,78 @@
   font-size: 11px;
   color: var(--text-dim);
 }
+
+/* ── オンライン/オフラインスイッチ ──────────────── */
+.onlineWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.onlineBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: none;
+}
+
+.onlineBtnOff {
+  color: var(--text-muted);
+  border-color: var(--border-dim);
+}
+.onlineBtnOff:hover:not(:disabled) {
+  color: var(--accent3);
+  border-color: var(--accent3);
+}
+
+.onlineBtnOn {
+  color: var(--accent3);
+  border-color: var(--accent3);
+  background: rgba(111,255,212,0.06);
+}
+.onlineBtnOn:hover:not(:disabled) {
+  background: rgba(111,255,212,0.12);
+}
+
+.onlineBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.onlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.onlineDotOn {
+  background: var(--accent3);
+  box-shadow: 0 0 6px var(--accent3);
+  animation: onlinePulse 2s ease-in-out infinite;
+}
+
+@keyframes onlinePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.onlineError {
+  font-size: 10px;
+  color: var(--danger);
+  letter-spacing: 0.05em;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

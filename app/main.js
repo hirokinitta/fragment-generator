@@ -9,7 +9,7 @@ const { execSync } = require('child_process')
 
 // ── 設定 ─────────────────────────────────────────────────────────────────────
 const CURRENT_VERSION = '0.1.0'
-const GITHUB_REPO     = 'yourname/fragment-generator' // ← 実際のリポジトリ名
+const GITHUB_REPO     = 'hirokinitta/fragment-generator'
 const BACKEND_PORT    = 8765
 const FRONTEND_PORT   = 8766
 const IS_DEV          = process.env.NODE_ENV === 'development'
@@ -17,6 +17,29 @@ const IS_DEV          = process.env.NODE_ENV === 'development'
 let mainWindow   = null
 let backendProc  = null
 let staticServer = null
+
+// ── オンライン/オフラインモード管理 ─────────────────────────────────────────
+// デフォルトはオフライン（ユーザーが明示的にオンにする）
+let isOnlineMode = false
+
+function setOnlineMode(enabled) {
+  isOnlineMode = enabled
+  console.log(`[mode] Online mode: ${enabled}`)
+  // フロントに通知
+  mainWindow?.webContents.send('online-mode-changed', { isOnline: enabled })
+  // オンラインにしたらアップデートチェック
+  if (enabled) checkForUpdate()
+}
+
+// ネットワーク疎通確認
+function checkConnectivity() {
+  return new Promise(resolve => {
+    https.get('https://api.github.com', { timeout: 5000 }, res => {
+      resolve(res.statusCode < 500)
+    }).on('error', () => resolve(false))
+      .on('timeout', () => resolve(false))
+  })
+}
 
 // ── 静的ファイルサーバー ─────────────────────────────────────────────────────
 // 優先順位: userData/frontend/out/ → インストール先のfrontend/out/
@@ -106,6 +129,11 @@ function startBackend() {
 
 // ── アップデートチェック ─────────────────────────────────────────────────────
 function checkForUpdate() {
+  // オフラインモードの時はチェックしない
+  if (!isOnlineMode) {
+    console.log('[updater] Skipped: offline mode')
+    return
+  }
   const url = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
   https.get(url, { headers: { 'User-Agent': 'fragment-generator' } }, res => {
     let data = ''
@@ -228,6 +256,24 @@ async function hotUpdate(downloadUrl, latestVersion) {
 // ── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('update-check-manual', () => checkForUpdate())
 
+// オンライン/オフライン切り替え
+ipcMain.on('set-online-mode', async (_e, { enabled }) => {
+  if (enabled) {
+    // オンラインにする前に疎通確認
+    const reachable = await checkConnectivity()
+    if (!reachable) {
+      mainWindow?.webContents.send('online-mode-error', {
+        message: 'インターネットに接続できませんでした',
+      })
+      return
+    }
+  }
+  setOnlineMode(enabled)
+})
+
+// 現在のオンラインモード状態を返す
+ipcMain.handle('get-online-mode', () => isOnlineMode)
+
 ipcMain.on('update-confirm', async (_e, { downloadUrl, latestVersion, canHotUpdate }) => {
   if (canHotUpdate && downloadUrl) {
     // ホットアップデート（再インストール不要）
@@ -284,7 +330,7 @@ app.whenReady().then(() => {
   startBackend()
   if (!IS_DEV) startStaticServer()
   createWindow()
-  setTimeout(checkForUpdate, 3000)
+  // 起動時の自動チェックはしない（ユーザーがオンラインモードにした時だけ）
 })
 
 app.on('window-all-closed', () => {

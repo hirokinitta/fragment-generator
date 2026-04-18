@@ -7,17 +7,25 @@ interface UpdateInfo {
 }
 
 interface ElectronAPI {
-  getBackendUrl:     () => Promise<string>
-  getVersion:        () => Promise<string>
-  minimize:          () => void
-  maximize:          () => void
-  close:             () => void
-  onUpdateAvailable: (cb: (info: UpdateInfo) => void) => void
-  confirmUpdate:     (info: UpdateInfo) => void
-  cancelUpdate:      () => void
-  checkUpdate:       () => void
-  onUpdateProgress:  (cb: (data: { percent: number; message?: string }) => void) => void
-  onUpdateError:     (cb: (data: { message: string }) => void) => void
+  getBackendUrl: () => Promise<string>
+  getVersion:    () => Promise<string>
+  minimize:      () => void
+  maximize:      () => void
+  close:         () => void
+
+  // オンライン/オフライン
+  getOnlineMode:       () => Promise<boolean>
+  setOnlineMode:       (enabled: boolean) => void
+  onOnlineModeChanged: (cb: (data: { isOnline: boolean }) => void) => void
+  onOnlineModeError:   (cb: (data: { message: string }) => void) => void
+
+  // アップデート
+  onUpdateAvailable:  (cb: (info: UpdateInfo) => void) => void
+  confirmUpdate:      (info: UpdateInfo) => void
+  cancelUpdate:       () => void
+  checkUpdate:        () => void
+  onUpdateProgress:   (cb: (data: { percent: number; message?: string }) => void) => void
+  onUpdateError:      (cb: (data: { message: string }) => void) => void
 }
 
 declare global {

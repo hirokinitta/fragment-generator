@@ -158,6 +158,11 @@ export default function TitleBar() {
   const [notices,    setNotices]    = useState<Notice[]>(STATIC_NOTICES)
   const [readIds,    setReadIds]    = useState<Set<string>>(new Set())
 
+  // オンライン/オフライン
+  const [isOnline,     setIsOnline]     = useState(false)
+  const [onlineError,  setOnlineError]  = useState<string | null>(null)
+  const [onlineLoading, setOnlineLoading] = useState(false)
+
   // アップデートモーダル
   const [modalInfo,  setModalInfo]  = useState<UpdateInfo | null>(null)
   const [dlProgress, setDlProgress] = useState<number | null>(null)
@@ -172,16 +177,36 @@ export default function TitleBar() {
     const saved = localStorage.getItem('fg-read-notices')
     if (saved) setReadIds(new Set(JSON.parse(saved)))
 
-    // ダウンロード進捗を受け取る
-    window.electron?.onUpdateProgress?.(({ percent }: { percent: number }) => {
-      setDlProgress(percent)
+    if (!window.electron) return
+
+    // 初期のオンラインモード状態を取得
+    window.electron.getOnlineMode().then(setIsOnline)
+
+    // オンラインモード変更の通知を受け取る
+    window.electron.onOnlineModeChanged(({ isOnline }) => {
+      setIsOnline(isOnline)
+      setOnlineLoading(false)
+      setOnlineError(null)
     })
 
-    // エラーを受け取る
-    window.electron?.onUpdateError?.(({ message }: { message: string }) => {
-      setDlError(message)
+    // オンラインモードエラー
+    window.electron.onOnlineModeError(({ message }) => {
+      setOnlineError(message)
+      setOnlineLoading(false)
+      setTimeout(() => setOnlineError(null), 4000)
     })
+
+    // ダウンロード進捗
+    window.electron.onUpdateProgress(({ percent }) => setDlProgress(percent))
+    window.electron.onUpdateError(({ message }) => setDlError(message))
   }, [])
+
+  // オンライン切り替えハンドラ
+  const handleToggleOnline = () => {
+    if (!window.electron || onlineLoading) return
+    setOnlineLoading(true)
+    window.electron.setOnlineMode(!isOnline)
+  }
 
   // アップデート情報がElectronから届いたらお知らせに追加
   useEffect(() => {
@@ -260,6 +285,24 @@ export default function TitleBar() {
           <button className="theme-toggle" onClick={toggle}>
             {theme === 'dark' ? '☀ LIGHT' : '🌙 DARK'}
           </button>
+        )}
+
+        {/* オンライン/オフラインスイッチ */}
+        {mounted && isElectron && (
+          <div className={styles.onlineWrap}>
+            <button
+              className={`${styles.onlineBtn} ${isOnline ? styles.onlineBtnOn : styles.onlineBtnOff}`}
+              onClick={handleToggleOnline}
+              disabled={onlineLoading}
+              title={isOnline ? 'オンラインモード（クリックでオフラインに）' : 'オフラインモード（クリックでオンラインに）'}
+            >
+              <span className={`${styles.onlineDot} ${isOnline ? styles.onlineDotOn : ''}`} />
+              {onlineLoading ? '...' : isOnline ? 'ONLINE' : 'OFFLINE'}
+            </button>
+            {onlineError && (
+              <span className={styles.onlineError}>{onlineError}</span>
+            )}
+          </div>
         )}
 
         {/* ベルアイコン */}
