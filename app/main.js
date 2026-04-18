@@ -19,8 +19,21 @@ let backendProc  = null
 let staticServer = null
 
 // ── 静的ファイルサーバー ─────────────────────────────────────────────────────
+// 優先順位: userData/frontend/out/ → インストール先のfrontend/out/
+// ホットアップデート後は userData 側が使われる
+function getFrontendDir() {
+  const userDataOut = path.join(app.getPath('userData'), 'frontend', 'out')
+  if (fs.existsSync(userDataOut)) {
+    console.log('[static] Using userData frontend:', userDataOut)
+    return userDataOut
+  }
+  const bundledOut = path.join(__dirname, '../frontend/out')
+  console.log('[static] Using bundled frontend:', bundledOut)
+  return bundledOut
+}
+
 function startStaticServer() {
-  const outDir = path.join(__dirname, '../frontend/out')
+  const outDir = getFrontendDir()
 
   staticServer = http.createServer((req, res) => {
     let urlPath = decodeURIComponent(req.url.split('?')[0])
@@ -128,10 +141,12 @@ function checkForUpdate() {
 }
 
 // ── ホットアップデート（再インストール不要）──────────────────────────────────
-// GitHub Releases の frontend.zip をダウンロードして out/ に展開し再起動
+// frontend.zip を userData/frontend/out/ に展開する
+// 次回起動からはバンドル版より userData 版が優先される
 async function hotUpdate(downloadUrl, latestVersion) {
-  const tmpZip = path.join(os.tmpdir(), `fg-frontend-${latestVersion}.zip`)
-  const outDir = path.join(__dirname, '../frontend/out')
+  const tmpZip    = path.join(os.tmpdir(), `fg-frontend-${latestVersion}.zip`)
+  const targetDir = path.join(app.getPath('userData'), 'frontend')
+  const outDir    = path.join(targetDir, 'out')
 
   const sendProgress = (percent, message) => {
     mainWindow?.webContents.send('update-progress', { percent, message })
@@ -170,9 +185,10 @@ async function hotUpdate(downloadUrl, latestVersion) {
 
   sendProgress(65, '展開中...')
 
-  // ── Step2: 展開（PowerShellのExpand-Archiveを使用）───────────────────────
+  // ── Step2: 展開先フォルダを準備 ─────────────────────────────────────────
   const tmpExtract = path.join(os.tmpdir(), `fg-extract-${latestVersion}`)
   if (fs.existsSync(tmpExtract)) fs.rmSync(tmpExtract, { recursive: true })
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true })
 
   execSync(
     `powershell -Command "Expand-Archive -Path '${tmpZip}' -DestinationPath '${tmpExtract}' -Force"`,
@@ -181,37 +197,30 @@ async function hotUpdate(downloadUrl, latestVersion) {
 
   sendProgress(80, '適用中...')
 
-  // ── Step3: out/ を新しいファイルで置き換え ──────────────────────────────
-  // 展開されたフォルダ構造: tmpExtract/out/ または tmpExtract/ 直下
+  // ── Step3: out/ を userData に配置 ────────────────────────────────────
   let srcDir = tmpExtract
   if (fs.existsSync(path.join(tmpExtract, 'out'))) {
     srcDir = path.join(tmpExtract, 'out')
   }
 
-  // 古いout/を退避（ロールバック用）
-  const backupDir = outDir + '_backup'
-  if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true })
-  if (fs.existsSync(outDir))    fs.renameSync(outDir, backupDir)
-
-  // 新しいファイルを配置
+  // 古いuserData/frontend/out/ を削除して新しいものを配置
+  if (fs.existsSync(outDir)) fs.rmSync(outDir, { recursive: true })
   fs.renameSync(srcDir, outDir)
 
   sendProgress(90, '後処理中...')
 
   // 一時ファイルを削除
   try {
-    fs.rmSync(tmpZip,      { force: true })
-    fs.rmSync(tmpExtract,  { recursive: true, force: true })
-    fs.rmSync(backupDir,   { recursive: true, force: true })
+    fs.rmSync(tmpZip,     { force: true })
+    fs.rmSync(tmpExtract, { recursive: true, force: true })
   } catch (_) { /* 削除失敗は無視 */ }
 
   sendProgress(100, '完了！再起動します...')
 
-  // ── Step4: 静的サーバーを再起動してウィンドウをリロード ─────────────────
+  // ── Step4: 静的サーバーを再起動してリロード ─────────────────────────────
   await new Promise(r => setTimeout(r, 800))
-
   staticServer?.close(() => {
-    startStaticServer()
+    startStaticServer()  // getFrontendDir() が自動で userData を参照する
     mainWindow?.loadURL(`http://127.0.0.1:${FRONTEND_PORT}/`)
   })
 }
