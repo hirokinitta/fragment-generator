@@ -193,7 +193,7 @@ export default function TitleBar() {
       date:      new Date().toISOString().slice(0, 10),
       isNew:     true,
       isUpdate:  true,
-      UpdateInfo: hookUpdateInfo,
+      updateInfo: hookUpdateInfo,
     }
     setNotices(prev => {
       const filtered = prev.filter(n => !n.isUpdate)
