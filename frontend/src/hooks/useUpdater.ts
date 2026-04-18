@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 interface UpdateInfo {
   currentVersion: string
   latestVersion:  string
-  downloadUrl:    string
+  downloadUrl:    string | null
   releaseNotes:   string
+  canHotUpdate:   boolean
 }
 
 export function useUpdater() {

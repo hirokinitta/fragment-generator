@@ -1,8 +1,9 @@
 interface UpdateInfo {
   currentVersion: string
   latestVersion:  string
-  downloadUrl:    string
+  downloadUrl:    string | null
   releaseNotes:   string
+  canHotUpdate:   boolean
 }
 
 interface ElectronAPI {
@@ -11,12 +12,11 @@ interface ElectronAPI {
   minimize:          () => void
   maximize:          () => void
   close:             () => void
-  // アップデート
   onUpdateAvailable: (cb: (info: UpdateInfo) => void) => void
   confirmUpdate:     (info: UpdateInfo) => void
   cancelUpdate:      () => void
   checkUpdate:       () => void
-  onUpdateProgress:  (cb: (data: { percent: number }) => void) => void
+  onUpdateProgress:  (cb: (data: { percent: number; message?: string }) => void) => void
   onUpdateError:     (cb: (data: { message: string }) => void) => void
 }
 
