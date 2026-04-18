@@ -16,8 +16,9 @@ interface Notice {
 interface UpdateInfo {
   currentVersion: string
   latestVersion:  string
-  downloadUrl:    string
+  downloadUrl:    string | null
   releaseNotes:   string
+  canHotUpdate:   boolean   // trueなら再インストール不要
 }
 
 // アップデート以外の固定お知らせ
@@ -75,6 +76,19 @@ function UpdateModal({
             <span className={styles.modalVerNew}>v{info.latestVersion}</span>
           </div>
 
+          {/* 更新方式の表示 */}
+          <div className={styles.modalUpdateType}>
+            {info.canHotUpdate ? (
+              <span className={styles.hotUpdateBadge}>
+                ✓ 再インストール不要 — アプリ内で自動更新します
+              </span>
+            ) : (
+              <span className={styles.coldUpdateBadge}>
+                インストーラーをダウンロードして更新します
+              </span>
+            )}
+          </div>
+
           {info.releaseNotes && (
             <div className={styles.modalNotes}>
               <span className={styles.modalNotesLabel}>更新内容</span>
@@ -113,7 +127,7 @@ function UpdateModal({
               あとで
             </button>
             <button className={styles.modalOk} onClick={onConfirm}>
-              OK — 今すぐアップデート
+              OK — {info.canHotUpdate ? '今すぐ更新（再起動のみ）' : 'インストーラーをダウンロード'}
             </button>
           </div>
         )}

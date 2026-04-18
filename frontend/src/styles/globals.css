@@ -70,9 +70,8 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  /* GPU レイヤーに分離して他の描画に影響させない */
   will-change: opacity;
-  contain: strict;
+  /* contain: strict は削除 — フォント継承を壊すため */
 }
 #crt-overlay::before {
   content: '';

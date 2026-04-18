@@ -1,43 +1,33 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const { spawn }   = require('child_process')
-const path        = require('path')
-const fs          = require('fs')
-const https       = require('https')
-const http        = require('http')
-const os          = require('os')
+const { spawn }  = require('child_process')
+const path       = require('path')
+const fs         = require('fs')
+const https      = require('https')
+const http       = require('http')
+const os         = require('os')
+const { execSync } = require('child_process')
 
 // ── 設定 ─────────────────────────────────────────────────────────────────────
 const CURRENT_VERSION = '0.1.0'
-const GITHUB_REPO     = 'yourname/fragment-generator'
+const GITHUB_REPO     = 'yourname/fragment-generator' // ← 実際のリポジトリ名
 const BACKEND_PORT    = 8765
-const FRONTEND_PORT   = 8766   // 静的ファイルサーバーのポート
+const FRONTEND_PORT   = 8766
 const IS_DEV          = process.env.NODE_ENV === 'development'
 
 let mainWindow   = null
 let backendProc  = null
-let staticServer = null   // 静的ファイルサーバー
+let staticServer = null
 
-// ── 静的ファイルサーバー（本番用）────────────────────────────────────────────
-// Electronの loadFile は CSS の絶対パスが壊れるため
-// ローカルHTTPサーバーで Next.js の out/ を配信する
+// ── 静的ファイルサーバー ─────────────────────────────────────────────────────
 function startStaticServer() {
   const outDir = path.join(__dirname, '../frontend/out')
 
   staticServer = http.createServer((req, res) => {
-    // URLのデコードとクリーニング
     let urlPath = decodeURIComponent(req.url.split('?')[0])
-
-    // / → /splash/index.html（エントリポイント）
     if (urlPath === '/') urlPath = '/splash/index.html'
-
-    // /splash → /splash/index.html（trailingSlash対応）
-    if (!path.extname(urlPath)) {
-      urlPath = urlPath.replace(/\/?$/, '/index.html')
-    }
+    if (!path.extname(urlPath)) urlPath = urlPath.replace(/\/?$/, '/index.html')
 
     const filePath = path.join(outDir, urlPath)
-
-    // MIMEタイプの判定
     const ext = path.extname(filePath).toLowerCase()
     const mimeTypes = {
       '.html': 'text/html; charset=utf-8',
@@ -48,20 +38,15 @@ function startStaticServer() {
       '.svg':  'image/svg+xml',
       '.ico':  'image/x-icon',
       '.json': 'application/json',
-      '.woff': 'font/woff',
       '.woff2':'font/woff2',
+      '.woff': 'font/woff',
     }
 
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        // ファイルが見つからない場合はsplashにフォールバック
         const fallback = path.join(outDir, 'splash/index.html')
         fs.readFile(fallback, (err2, data2) => {
-          if (err2) {
-            res.writeHead(404)
-            res.end('Not found')
-            return
-          }
+          if (err2) { res.writeHead(404); res.end('Not found'); return }
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
           res.end(data2)
         })
@@ -73,7 +58,7 @@ function startStaticServer() {
   })
 
   staticServer.listen(FRONTEND_PORT, '127.0.0.1', () => {
-    console.log(`[static] Serving frontend on http://127.0.0.1:${FRONTEND_PORT}`)
+    console.log(`[static] Frontend on http://127.0.0.1:${FRONTEND_PORT}`)
   })
 }
 
@@ -114,20 +99,27 @@ function checkForUpdate() {
     res.on('data', chunk => (data += chunk))
     res.on('end', () => {
       try {
-        const release     = JSON.parse(data)
-        const latestVer   = release.tag_name?.replace(/^v/, '') ?? null
-        const exeAsset    = release.assets?.find(a =>
-          a.name.endsWith('.exe') && a.name.includes('Setup')
-        )
-        const downloadUrl = exeAsset?.browser_download_url
-        if (latestVer && latestVer !== CURRENT_VERSION && downloadUrl) {
-          mainWindow?.webContents.send('update-available', {
-            currentVersion: CURRENT_VERSION,
-            latestVersion:  latestVer,
-            downloadUrl,
-            releaseNotes:   release.body ?? '',
-          })
+        const release   = JSON.parse(data)
+        const latestVer = release.tag_name?.replace(/^v/, '') ?? null
+
+        // frontend.zip アセットを探す（フロントのみ差分更新）
+        const frontendAsset = release.assets?.find(a => a.name === 'frontend.zip')
+        const frontendUrl   = frontendAsset?.browser_download_url
+
+        if (!latestVer || latestVer === CURRENT_VERSION) {
+          console.log(`[updater] Already latest: ${CURRENT_VERSION}`)
+          return
         }
+
+        console.log(`[updater] New version: ${latestVer}`)
+        mainWindow?.webContents.send('update-available', {
+          currentVersion: CURRENT_VERSION,
+          latestVersion:  latestVer,
+          downloadUrl:    frontendUrl ?? null,
+          releaseNotes:   release.body ?? '',
+          // frontendUrlがある = 再インストール不要な差分更新が可能
+          canHotUpdate:   !!frontendUrl,
+        })
       } catch (e) {
         console.error('[updater] parse error:', e)
       }
@@ -135,53 +127,113 @@ function checkForUpdate() {
   }).on('error', e => console.log('[updater] offline:', e.message))
 }
 
-// ── アップデートダウンロード ─────────────────────────────────────────────────
-function downloadAndInstallUpdate(downloadUrl, latestVersion) {
-  const tmpFile = path.join(os.tmpdir(), `fg-${latestVersion}-setup.exe`)
-  const sendProgress = p => mainWindow?.webContents.send('update-progress', { percent: p })
+// ── ホットアップデート（再インストール不要）──────────────────────────────────
+// GitHub Releases の frontend.zip をダウンロードして out/ に展開し再起動
+async function hotUpdate(downloadUrl, latestVersion) {
+  const tmpZip = path.join(os.tmpdir(), `fg-frontend-${latestVersion}.zip`)
+  const outDir = path.join(__dirname, '../frontend/out')
 
-  sendProgress(0)
-  const file = fs.createWriteStream(tmpFile)
-
-  function download(url, redirectCount = 0) {
-    if (redirectCount > 3) {
-      mainWindow?.webContents.send('update-error', { message: 'リダイレクトが多すぎます' })
-      return
-    }
-    const client = url.startsWith('https') ? https : http
-    client.get(url, { headers: { 'User-Agent': 'fragment-generator' } }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
-        download(res.headers.location, redirectCount + 1)
-        return
-      }
-      const total = parseInt(res.headers['content-length'] || '0', 10)
-      let downloaded = 0
-      res.on('data', chunk => {
-        downloaded += chunk.length
-        file.write(chunk)
-        if (total > 0) sendProgress(Math.round(downloaded / total * 100))
-      })
-      res.on('end', () => {
-        file.end()
-        sendProgress(100)
-        setTimeout(() => {
-          spawn(tmpFile, ['/S'], { detached: true, stdio: 'ignore' }).unref()
-          backendProc?.kill()
-          staticServer?.close()
-          app.quit()
-        }, 500)
-      })
-      res.on('error', err => mainWindow?.webContents.send('update-error', { message: err.message }))
-    }).on('error', err => mainWindow?.webContents.send('update-error', { message: err.message }))
+  const sendProgress = (percent, message) => {
+    mainWindow?.webContents.send('update-progress', { percent, message })
   }
-  download(downloadUrl)
+
+  sendProgress(0, 'ダウンロード開始...')
+
+  // ── Step1: ダウンロード ─────────────────────────────────────────────────
+  await new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(tmpZip)
+
+    function download(url, redirectCount = 0) {
+      if (redirectCount > 5) { reject(new Error('Too many redirects')); return }
+      const client = url.startsWith('https') ? https : http
+      client.get(url, { headers: { 'User-Agent': 'fragment-generator' } }, res => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          download(res.headers.location, redirectCount + 1)
+          return
+        }
+        const total = parseInt(res.headers['content-length'] || '0', 10)
+        let downloaded = 0
+        res.on('data', chunk => {
+          downloaded += chunk.length
+          file.write(chunk)
+          if (total > 0) sendProgress(
+            Math.round(downloaded / total * 60), // 0〜60%をダウンロードに使う
+            `ダウンロード中... ${Math.round(downloaded / total * 100)}%`
+          )
+        })
+        res.on('end',   () => { file.end(); resolve() })
+        res.on('error', reject)
+      }).on('error', reject)
+    }
+    download(downloadUrl)
+  })
+
+  sendProgress(65, '展開中...')
+
+  // ── Step2: 展開（PowerShellのExpand-Archiveを使用）───────────────────────
+  const tmpExtract = path.join(os.tmpdir(), `fg-extract-${latestVersion}`)
+  if (fs.existsSync(tmpExtract)) fs.rmSync(tmpExtract, { recursive: true })
+
+  execSync(
+    `powershell -Command "Expand-Archive -Path '${tmpZip}' -DestinationPath '${tmpExtract}' -Force"`,
+    { timeout: 60000 }
+  )
+
+  sendProgress(80, '適用中...')
+
+  // ── Step3: out/ を新しいファイルで置き換え ──────────────────────────────
+  // 展開されたフォルダ構造: tmpExtract/out/ または tmpExtract/ 直下
+  let srcDir = tmpExtract
+  if (fs.existsSync(path.join(tmpExtract, 'out'))) {
+    srcDir = path.join(tmpExtract, 'out')
+  }
+
+  // 古いout/を退避（ロールバック用）
+  const backupDir = outDir + '_backup'
+  if (fs.existsSync(backupDir)) fs.rmSync(backupDir, { recursive: true })
+  if (fs.existsSync(outDir))    fs.renameSync(outDir, backupDir)
+
+  // 新しいファイルを配置
+  fs.renameSync(srcDir, outDir)
+
+  sendProgress(90, '後処理中...')
+
+  // 一時ファイルを削除
+  try {
+    fs.rmSync(tmpZip,      { force: true })
+    fs.rmSync(tmpExtract,  { recursive: true, force: true })
+    fs.rmSync(backupDir,   { recursive: true, force: true })
+  } catch (_) { /* 削除失敗は無視 */ }
+
+  sendProgress(100, '完了！再起動します...')
+
+  // ── Step4: 静的サーバーを再起動してウィンドウをリロード ─────────────────
+  await new Promise(r => setTimeout(r, 800))
+
+  staticServer?.close(() => {
+    startStaticServer()
+    mainWindow?.loadURL(`http://127.0.0.1:${FRONTEND_PORT}/`)
+  })
 }
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('update-check-manual', () => checkForUpdate())
-ipcMain.on('update-confirm',  (_e, { downloadUrl, latestVersion }) =>
-  downloadAndInstallUpdate(downloadUrl, latestVersion))
-ipcMain.on('update-cancel',   () => console.log('[updater] cancelled'))
+
+ipcMain.on('update-confirm', async (_e, { downloadUrl, latestVersion, canHotUpdate }) => {
+  if (canHotUpdate && downloadUrl) {
+    // ホットアップデート（再インストール不要）
+    try {
+      await hotUpdate(downloadUrl, latestVersion)
+    } catch (err) {
+      console.error('[hotUpdate] failed:', err)
+      mainWindow?.webContents.send('update-error', {
+        message: `更新に失敗しました: ${err.message}`,
+      })
+    }
+  }
+})
+
+ipcMain.on('update-cancel', () => console.log('[updater] cancelled'))
 ipcMain.handle('get-backend-url', () => `http://localhost:${BACKEND_PORT}`)
 ipcMain.handle('get-version',     () => CURRENT_VERSION)
 
@@ -212,7 +264,6 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3000')
     mainWindow.webContents.openDevTools()
   } else {
-    // ローカルサーバー経由でロード（CSSパスが正しく解決される）
     mainWindow.loadURL(`http://127.0.0.1:${FRONTEND_PORT}/`)
   }
 

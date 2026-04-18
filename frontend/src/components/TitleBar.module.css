@@ -368,3 +368,16 @@
   color: var(--accent);
   font-size: 10px;
 }
+
+.modalUpdateType {
+  margin: 4px 0;
+}
+.hotUpdateBadge {
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 0.05em;
+}
+.coldUpdateBadge {
+  font-size: 11px;
+  color: var(--text-dim);
+}

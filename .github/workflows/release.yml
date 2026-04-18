@@ -21,8 +21,7 @@ jobs:
 
       - name: Build Go backend
         working-directory: backend
-        run: |
-          go build -ldflags="-s -w" -o ../app/resources/backend.exe .
+        run: go build -ldflags="-s -w" -o ../backend.exe .
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -35,16 +34,22 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install Electron deps & package
+      # frontend/out/ を zip にまとめる（ホットアップデート用）
+      - name: Zip frontend output
         run: |
-          npm ci
-          npm run build
+          Compress-Archive -Path frontend/out/* -DestinationPath frontend-out.zip
+
+      - name: Install Electron deps
+        run: npm ci
+
+      - name: Package with Electron
+        run: npm run build
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             dist/*.exe
-            dist/*.nsis.7z
+            frontend-out.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
