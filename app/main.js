@@ -144,7 +144,7 @@ function checkForUpdate() {
         const latestVer = release.tag_name?.replace(/^v/, '') ?? null
 
         // frontend-out.zip アセットを探す（フロントのみ差分更新）
-        const frontendAsset = release.assets?.find(a => a.name === 'frontend-out.zip')
+        const frontendAsset = release.assets?.find(a => a.name === 'frontend.zip')
         const frontendUrl   = frontendAsset?.browser_download_url
 
         if (!latestVer || latestVer === CURRENT_VERSION) {
