@@ -143,8 +143,8 @@ function checkForUpdate() {
         const release   = JSON.parse(data)
         const latestVer = release.tag_name?.replace(/^v/, '') ?? null
 
-        // frontend.zip アセットを探す（フロントのみ差分更新）
-        const frontendAsset = release.assets?.find(a => a.name === 'frontend.zip')
+        // frontend-out.zip アセットを探す（フロントのみ差分更新）
+        const frontendAsset = release.assets?.find(a => a.name === 'frontend-out.zip')
         const frontendUrl   = frontendAsset?.browser_download_url
 
         if (!latestVer || latestVer === CURRENT_VERSION) {
@@ -225,15 +225,35 @@ async function hotUpdate(downloadUrl, latestVersion) {
 
   sendProgress(80, '適用中...')
 
-  // ── Step3: out/ を userData に配置 ────────────────────────────────────
+  // ── Step3: 展開結果を userData/frontend/out/ に配置 ──────────────────────
+  // zipの構造パターンを自動判定：
+  //   パターンA: zip直下にsplash/等がある → tmpExtractをそのままoutとして使う
+  //   パターンB: zip直下にout/フォルダがある → out/の中身を使う
+  //   パターンC: zip直下にfrontend/out/がある → frontend/out/を使う
   let srcDir = tmpExtract
-  if (fs.existsSync(path.join(tmpExtract, 'out'))) {
+
+  if (fs.existsSync(path.join(tmpExtract, 'out', 'splash'))) {
+    // パターンB
     srcDir = path.join(tmpExtract, 'out')
+  } else if (fs.existsSync(path.join(tmpExtract, 'frontend', 'out', 'splash'))) {
+    // パターンC
+    srcDir = path.join(tmpExtract, 'frontend', 'out')
+  } else if (fs.existsSync(path.join(tmpExtract, 'splash'))) {
+    // パターンA（zip直下にsplash/がある = out/の中身がそのまま展開されている）
+    srcDir = tmpExtract
   }
+
+  console.log('[hotUpdate] srcDir:', srcDir)
+  console.log('[hotUpdate] contents:', fs.readdirSync(srcDir))
 
   // 古いuserData/frontend/out/ を削除して新しいものを配置
   if (fs.existsSync(outDir)) fs.rmSync(outDir, { recursive: true })
-  fs.renameSync(srcDir, outDir)
+  fs.mkdirSync(outDir, { recursive: true })
+
+  // srcDirの中身をoutDirにコピー
+  for (const item of fs.readdirSync(srcDir)) {
+    fs.renameSync(path.join(srcDir, item), path.join(outDir, item))
+  }
 
   sendProgress(90, '後処理中...')
 
