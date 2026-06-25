@@ -37,7 +37,7 @@ jobs:
       # frontend/out/ を zip にまとめる（ホットアップデート用）
       - name: Zip frontend output
         run: |
-          Compress-Archive -Path frontend/out/* -DestinationPath frontend.zip
+          Compress-Archive -Path frontend/out/* -DestinationPath frontend.zip -Force
 
       - name: Install Electron deps
         run: npm ci
