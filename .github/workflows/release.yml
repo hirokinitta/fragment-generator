@@ -36,8 +36,12 @@ jobs:
 
       # frontend/out/ を zip にまとめる（ホットアップデート用）
       - name: Zip frontend output
+        shell: pwsh
         run: |
-          Compress-Archive -Path frontend/out/* -DestinationPath frontend.zip -Force
+          Remove-Item -Path frontend.zip -ErrorAction SilentlyContinue
+          Push-Location frontend/out
+          Compress-Archive -Path * -DestinationPath ../../frontend.zip
+          Pop-Location
 
       - name: Install Electron deps
         run: npm ci
