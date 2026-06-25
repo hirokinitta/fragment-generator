@@ -37,19 +37,21 @@ jobs:
       # frontend/out/ を zip にまとめる（ホットアップデート用）
       - name: Zip frontend output
         run: |
-          Compress-Archive -Path frontend/out/* -DestinationPath frontend-out.zip
+          Compress-Archive -Path frontend/out/* -DestinationPath frontend.zip
 
       - name: Install Electron deps
         run: npm ci
 
       - name: Package with Electron
         run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             dist/*.exe
-            frontend-out.zip
+            frontend.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
