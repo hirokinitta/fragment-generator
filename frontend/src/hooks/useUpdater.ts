@@ -3,28 +3,43 @@ import { useEffect, useState } from 'react'
 interface UpdateInfo {
   currentVersion: string
   latestVersion:  string
-  downloadUrl:    string | null
   releaseNotes:   string
-  canHotUpdate:   boolean
 }
 
+type UpdateState = 'idle' | 'available' | 'downloading' | 'downloaded' | 'error'
+
 export function useUpdater() {
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
+  const [updateInfo,   setUpdateInfo]   = useState<UpdateInfo | null>(null)
+  const [updateState,  setUpdateState]  = useState<UpdateState>('idle')
+  const [progress,     setProgress]     = useState(0)
+  const [errorMsg,     setErrorMsg]     = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.electron) return
-    window.electron.onUpdateAvailable((info) => {
+
+    window.electron.onUpdateAvailable(info => {
       setUpdateInfo(info)
+      setUpdateState('available')
+    })
+
+    window.electron.onUpdateProgress(({ percent }) => {
+      setProgress(percent)
+      setUpdateState('downloading')
+    })
+
+    window.electron.onUpdateDownloaded(() => {
+      setProgress(100)
+      setUpdateState('downloaded')
+    })
+
+    window.electron.onUpdateError(({ message }) => {
+      setErrorMsg(message)
+      setUpdateState('error')
     })
   }, [])
 
-  const accept = () => {
-    if (!updateInfo || !window.electron) return
-    window.electron.confirmUpdate(updateInfo)
-    setUpdateInfo(null)
-  }
+  const install = () => window.electron?.installUpdate()
+  const dismiss = () => { setUpdateState('idle'); setUpdateInfo(null) }
 
-  const dismiss = () => setUpdateInfo(null)
-
-  return { updateInfo, accept, dismiss }
+  return { updateInfo, updateState, progress, errorMsg, install, dismiss }
 }
