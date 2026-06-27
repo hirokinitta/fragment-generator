@@ -1,6 +1,6 @@
 {
   "name": "fragment-generator",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "記憶断片生成器",
   "author": "hirokinitta",
   "main": "app/main.js",
