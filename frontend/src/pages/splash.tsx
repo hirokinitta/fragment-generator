@@ -12,6 +12,11 @@ type Phase = 'icon' | 'iconFadeOut' | 'title' | 'ready'
 
 const APP_TITLE = 'FRAGMENT_GENERATOR'
 const APP_SUB   = '記憶断片生成器'
+const [version, setVersion] = useState('')
+
+useEffect(() => {
+  window.electron?.getVersion().then(v => setVersion(v))
+}, [])
 
 export default function Splash() {
   const router = useRouter()
@@ -136,7 +141,7 @@ export default function Splash() {
           />
         </div>
 
-        <p className={styles.iconVersion}>v0.1.1</p>
+        <p className={styles.iconVersion}>v{version}</p>
       </div>
 
       {/* ── シーン2：タイトル ── */}
@@ -176,7 +181,7 @@ export default function Splash() {
           </p>
         </div>
 
-        <p className={styles.titleVersion}>v0.1.1</p>
+        <p className={styles.titleVersion}>v{version}</p>
       </div>
     </>
   )

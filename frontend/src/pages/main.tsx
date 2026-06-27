@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Head from 'next/head'
 import TitleBar from '../components/TitleBar'
 import GeneratePanel from '../components/GeneratePanel'
@@ -22,6 +22,11 @@ export default function Main() {
   const [tab,            setTab]            = useState<Tab>('scene')
   const [allScenes,      setAllScenes]      = useState<Scene[]>([])
   const [glitchLevel,    setGlitchLevel]    = useState<0 | 1 | 2>(0)
+  const [version, setVersion] = useState('')
+
+  useEffect(() => {
+    window.electron?.getVersion().then(v => setVersion(v))
+  }, [])
 
   const calcGlitch = (n: number, ax: number, u: number): 0 | 1 | 2 => {
     if (n >= 90 && ax >= 90 && u >= 90) return 2
@@ -145,7 +150,7 @@ export default function Main() {
         </div>
 
         <footer className={styles.footer}>
-          <span>FRAGMENT_GENERATOR v0.1.1</span>
+          <span>FRAGMENT_GENERATOR v{version}</span>
           <span className={styles.footerDot}>·</span>
           <span>LOCAL_MODE</span>
           <span className={styles.footerDot}>·</span>
