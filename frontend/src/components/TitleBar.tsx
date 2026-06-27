@@ -3,6 +3,12 @@ import { useTheme } from '../pages/_app'
 import { useUpdater } from '../hooks/useUpdater'
 import styles from './TitleBar.module.css'
 
+interface UpdateInfo {
+  currentVersion: string
+  latestVersion:  string
+  releaseNotes:   string
+}
+
 interface Notice {
   id:       string
   title:    string
