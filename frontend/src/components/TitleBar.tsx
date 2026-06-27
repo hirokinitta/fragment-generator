@@ -4,11 +4,11 @@ import { useUpdater } from '../hooks/useUpdater'
 import styles from './TitleBar.module.css'
 
 interface Notice {
-  id:      string
-  title:   string
-  body:    string
-  date:    string
-  isNew:   boolean
+  id:       string
+  title:    string
+  body:     string
+  date:     string
+  isNew:    boolean
   isUpdate?: boolean
 }
 
@@ -38,14 +38,9 @@ const STATIC_NOTICES: Notice[] = [
 
 // ── アップデートモーダル ───────────────────────────────────────────────────────
 function UpdateModal({
-  info,
-  state,
-  progress,
-  error,
-  onConfirm,
-  onDismiss,
+  info, state, progress, error, onConfirm, onDismiss,
 }: {
-  info:      { currentVersion: string; latestVersion: string; releaseNotes: string }
+  info:      UpdateInfo
   state:     'available' | 'downloading' | 'downloaded' | 'error'
   progress:  number
   error:     string | null
@@ -68,7 +63,7 @@ function UpdateModal({
 
           <div className={styles.modalUpdateType}>
             <span className={styles.hotUpdateBadge}>
-              ✓ バックグラウンドでダウンロード後に再起動して更新します
+              ✓ ダウンロード後に再起動して更新します
             </span>
           </div>
 
@@ -83,7 +78,7 @@ function UpdateModal({
           )}
 
           {/* ダウンロード中 */}
-          {(state === 'downloading') && (
+          {state === 'downloading' && (
             <div className={styles.progressWrap}>
               <div className={styles.progressTrack}>
                 <div className={styles.progressFill} style={{ width: `${progress}%` }} />
@@ -102,28 +97,21 @@ function UpdateModal({
         </div>
 
         <div className={styles.modalFooter}>
-          {/* available: OK / あとで */}
           {state === 'available' && (
             <>
               <button className={styles.modalCancel} onClick={onDismiss}>あとで</button>
-              <button className={styles.modalOk} onClick={onConfirm}>OK — 今すぐダウンロード</button>
+              <button className={styles.modalOk} onClick={onConfirm}>OK — ダウンロード開始</button>
             </>
           )}
-
-          {/* downloading: 待機のみ */}
           {state === 'downloading' && (
             <button className={styles.modalCancel} disabled>ダウンロード中...</button>
           )}
-
-          {/* downloaded: 再起動ボタン */}
           {state === 'downloaded' && (
             <>
               <button className={styles.modalCancel} onClick={onDismiss}>あとで</button>
               <button className={styles.modalOk} onClick={onConfirm}>再起動して更新</button>
             </>
           )}
-
-          {/* error: 閉じる */}
           {state === 'error' && (
             <button className={styles.modalCancel} onClick={onDismiss}>閉じる</button>
           )}
@@ -136,25 +124,45 @@ function UpdateModal({
 // ── TitleBar 本体 ─────────────────────────────────────────────────────────────
 export default function TitleBar() {
   const { theme, toggle } = useTheme()
-  const { updateInfo, updateState, progress, errorMsg, install, dismiss } = useUpdater()
+  const { updateInfo, updateState, progress, errorMsg, confirm, dismiss } = useUpdater()
 
-  const [mounted,    setMounted]    = useState(false)
-  const [isElectron, setIsElectron] = useState(false)
-  const [bellOpen,   setBellOpen]   = useState(false)
-  const [notices,    setNotices]    = useState<Notice[]>(STATIC_NOTICES)
-  const [readIds,    setReadIds]    = useState<Set<string>>(new Set())
-  const [modalOpen,  setModalOpen]  = useState(false)
+  const [mounted,       setMounted]       = useState(false)
+  const [isElectron,    setIsElectron]    = useState(false)
+  const [bellOpen,      setBellOpen]      = useState(false)
+  const [notices,       setNotices]       = useState<Notice[]>(STATIC_NOTICES)
+  const [readIds,       setReadIds]       = useState<Set<string>>(new Set())
+  const [modalOpen,     setModalOpen]     = useState(false)
+  const [isOnline,      setIsOnline]      = useState(false)
+  const [onlineError,   setOnlineError]   = useState<string | null>(null)
+  const [onlineLoading, setOnlineLoading] = useState(false)
 
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
     setIsElectron(!!window.electron)
+
     const saved = localStorage.getItem('fg-read-notices')
     if (saved) setReadIds(new Set(JSON.parse(saved)))
+
+    if (!window.electron) return
+
+    window.electron.getOnlineMode().then(setIsOnline)
+
+    window.electron.onOnlineModeChanged(({ isOnline }) => {
+      setIsOnline(isOnline)
+      setOnlineLoading(false)
+      setOnlineError(null)
+    })
+
+    window.electron.onOnlineModeError(({ message }) => {
+      setOnlineError(message)
+      setOnlineLoading(false)
+      setTimeout(() => setOnlineError(null), 4000)
+    })
   }, [])
 
-  // アップデート通知をお知らせに追加
+  // アップデート通知をお知らせに追加・モーダルを自動表示
   useEffect(() => {
     if (!updateInfo) return
     const notice: Notice = {
@@ -166,8 +174,13 @@ export default function TitleBar() {
       isUpdate: true,
     }
     setNotices(prev => [notice, ...prev.filter(n => !n.isUpdate)])
-    setModalOpen(true)  // 自動でモーダルを開く
+    setModalOpen(true)
   }, [updateInfo])
+
+  // ダウンロード完了時もモーダルを開く（バックグラウンド続行から戻る場合）
+  useEffect(() => {
+    if (updateState === 'downloaded') setModalOpen(true)
+  }, [updateState])
 
   // パネル外クリックで閉じる
   useEffect(() => {
@@ -194,17 +207,21 @@ export default function TitleBar() {
     if (n.isUpdate) { setBellOpen(false); setModalOpen(true) }
   }
 
-  // OKボタン: available→ダウンロード開始 / downloaded→再起動
+  const handleToggleOnline = () => {
+    if (!window.electron || onlineLoading) return
+    setOnlineLoading(true)
+    window.electron.setOnlineMode(!isOnline)
+  }
+
   const handleConfirm = () => {
-    if (updateState === 'downloaded') {
-      install()
-    }
-    // availableのときは何もしない（electron-updaterが自動DLするので待つだけ）
+    confirm()
+    // downloadingに入ったらモーダルは開いたままにする
   }
 
   const handleDismiss = () => {
     setModalOpen(false)
-    dismiss()
+    // downloaded状態のときはdismissしない（再起動はいつでもできる）
+    if (updateState !== 'downloaded') dismiss()
   }
 
   return (
@@ -220,6 +237,24 @@ export default function TitleBar() {
           <button className="theme-toggle" onClick={toggle}>
             {theme === 'dark' ? '☀ LIGHT' : '🌙 DARK'}
           </button>
+        )}
+
+        {/* オンライン/オフラインスイッチ */}
+        {mounted && isElectron && (
+          <div className={styles.onlineWrap}>
+            <button
+              className={`${styles.onlineBtn} ${isOnline ? styles.onlineBtnOn : styles.onlineBtnOff}`}
+              onClick={handleToggleOnline}
+              disabled={onlineLoading}
+              title={isOnline ? 'オンラインモード（クリックでオフラインに）' : 'オフラインモード（クリックでオンラインに）'}
+            >
+              <span className={`${styles.onlineDot} ${isOnline ? styles.onlineDotOn : ''}`} />
+              {onlineLoading ? '...' : isOnline ? 'ONLINE' : 'OFFLINE'}
+            </button>
+            {onlineError && (
+              <span className={styles.onlineError}>{onlineError}</span>
+            )}
+          </div>
         )}
 
         {/* ベルアイコン */}
@@ -280,7 +315,9 @@ export default function TitleBar() {
       </div>
 
       {/* アップデートモーダル */}
-      {modalOpen && updateInfo && (updateState === 'available' || updateState === 'downloading' || updateState === 'downloaded' || updateState === 'error') && (
+      {modalOpen && updateInfo &&
+        (updateState === 'available' || updateState === 'downloading' ||
+         updateState === 'downloaded' || updateState === 'error') && (
         <UpdateModal
           info={updateInfo}
           state={updateState}

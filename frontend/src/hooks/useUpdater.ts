@@ -6,13 +6,18 @@ interface UpdateInfo {
   releaseNotes:   string
 }
 
+// idle        : 何もなし
+// available   : 新バージョンあり（ユーザーに確認中）
+// downloading : ダウンロード中
+// downloaded  : ダウンロード完了（再起動待ち）
+// error       : エラー
 type UpdateState = 'idle' | 'available' | 'downloading' | 'downloaded' | 'error'
 
 export function useUpdater() {
-  const [updateInfo,   setUpdateInfo]   = useState<UpdateInfo | null>(null)
-  const [updateState,  setUpdateState]  = useState<UpdateState>('idle')
-  const [progress,     setProgress]     = useState(0)
-  const [errorMsg,     setErrorMsg]     = useState<string | null>(null)
+  const [updateInfo,  setUpdateInfo]  = useState<UpdateInfo | null>(null)
+  const [updateState, setUpdateState] = useState<UpdateState>('idle')
+  const [progress,    setProgress]    = useState(0)
+  const [errorMsg,    setErrorMsg]    = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.electron) return
@@ -38,8 +43,20 @@ export function useUpdater() {
     })
   }, [])
 
-  const install = () => window.electron?.installUpdate()
-  const dismiss = () => { setUpdateState('idle'); setUpdateInfo(null) }
+  // OKを押したとき: available→DL開始 / downloaded→再起動
+  const confirm = () => {
+    if (updateState === 'available') {
+      window.electron?.confirmUpdate()
+    } else if (updateState === 'downloaded') {
+      window.electron?.installUpdate()
+    }
+  }
 
-  return { updateInfo, updateState, progress, errorMsg, install, dismiss }
+  const dismiss = () => {
+    setUpdateState('idle')
+    setUpdateInfo(null)
+    setErrorMsg(null)
+  }
+
+  return { updateInfo, updateState, progress, errorMsg, confirm, dismiss }
 }

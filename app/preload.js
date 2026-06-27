@@ -9,11 +9,19 @@ contextBridge.exposeInMainWorld('electron', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close:    () => ipcRenderer.send('window-close'),
 
-  // ── アップデート ────────────────────────────────────────────────────────
-  checkUpdate:        ()     => ipcRenderer.send('update-check-manual'),
-  installUpdate:      ()     => ipcRenderer.send('update-install'),
-  onUpdateAvailable:  (cb)   => ipcRenderer.on('update-available',  (_e, info) => cb(info)),
-  onUpdateProgress:   (cb)   => ipcRenderer.on('update-progress',   (_e, data) => cb(data)),
-  onUpdateDownloaded: (cb)   => ipcRenderer.on('update-downloaded',  (_e)      => cb()),
-  onUpdateError:      (cb)   => ipcRenderer.on('update-error',      (_e, data) => cb(data)),
+  // オンライン/オフライン
+  getOnlineMode:       ()          => ipcRenderer.invoke('get-online-mode'),
+  setOnlineMode:       (enabled)   => ipcRenderer.send('set-online-mode', { enabled }),
+  onOnlineModeChanged: (cb)        => ipcRenderer.on('online-mode-changed', (_e, data) => cb(data)),
+  onOnlineModeError:   (cb)        => ipcRenderer.on('online-mode-error',   (_e, data) => cb(data)),
+
+  // アップデート
+  checkUpdate:          ()   => ipcRenderer.send('update-check-manual'),
+  confirmUpdate:        ()   => ipcRenderer.send('update-confirm'),
+  installUpdate:        ()   => ipcRenderer.send('update-install'),
+  onUpdateAvailable:    (cb) => ipcRenderer.on('update-available',     (_e, info) => cb(info)),
+  onUpdateNotAvailable: (cb) => ipcRenderer.on('update-not-available', (_e)       => cb()),
+  onUpdateProgress:     (cb) => ipcRenderer.on('update-progress',      (_e, data) => cb(data)),
+  onUpdateDownloaded:   (cb) => ipcRenderer.on('update-downloaded',    (_e)       => cb()),
+  onUpdateError:        (cb) => ipcRenderer.on('update-error',         (_e, data) => cb(data)),
 })

@@ -13,14 +13,15 @@ const BACKEND_PORT    = 8765
 const FRONTEND_PORT   = 8766
 const IS_DEV          = process.env.NODE_ENV === 'development'
 
-let mainWindow  = null
-let backendProc = null
+let mainWindow   = null
+let backendProc  = null
 let staticServer = null
+let isOnlineMode = false
 
 // ── electron-updater 設定 ────────────────────────────────────────────────────
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
-autoUpdater.autoDownload = true
+autoUpdater.autoDownload = false         // ユーザーが確認してからDL
 autoUpdater.autoInstallOnAppQuit = false
 
 autoUpdater.on('update-available', info => {
@@ -34,6 +35,7 @@ autoUpdater.on('update-available', info => {
 
 autoUpdater.on('update-not-available', () => {
   log.info('[updater] already latest')
+  mainWindow?.webContents.send('update-not-available')
 })
 
 autoUpdater.on('download-progress', progress => {
@@ -55,12 +57,23 @@ autoUpdater.on('error', err => {
   mainWindow?.webContents.send('update-error', { message: err.message })
 })
 
-function checkForUpdate() {
-  if (IS_DEV) {
-    log.info('[updater] skipped in dev mode')
-    return
-  }
-  autoUpdater.checkForUpdates()
+// ── オンラインモード ─────────────────────────────────────────────────────────
+function setOnlineMode(enabled) {
+  isOnlineMode = enabled
+  log.info(`[mode] Online: ${enabled}`)
+  mainWindow?.webContents.send('online-mode-changed', { isOnline: enabled })
+  if (enabled && !IS_DEV) autoUpdater.checkForUpdates()
+}
+
+function checkConnectivity() {
+  return new Promise(resolve => {
+    const req = https.get('https://api.github.com', { timeout: 5000 }, res => {
+      resolve(res.statusCode < 500)
+      res.resume()
+    })
+    req.on('error',   () => resolve(false))
+    req.on('timeout', () => { req.destroy(); resolve(false) })
+  })
 }
 
 // ── 静的ファイルサーバー ─────────────────────────────────────────────────────
@@ -143,9 +156,30 @@ function startBackend() {
 }
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
-ipcMain.on('update-check-manual', () => checkForUpdate())
+ipcMain.on('set-online-mode', async (_e, { enabled }) => {
+  if (enabled) {
+    const ok = await checkConnectivity()
+    if (!ok) {
+      mainWindow?.webContents.send('online-mode-error', {
+        message: 'インターネットに接続できませんでした',
+      })
+      return
+    }
+  }
+  setOnlineMode(enabled)
+})
 
-// 「今すぐ再起動してアップデート」ボタン用
+ipcMain.handle('get-online-mode', () => isOnlineMode)
+ipcMain.on('update-check-manual', () => {
+  if (!IS_DEV) autoUpdater.checkForUpdates()
+})
+
+// ユーザーがOKを押したらダウンロード開始
+ipcMain.on('update-confirm', () => {
+  autoUpdater.downloadUpdate()
+})
+
+// ダウンロード完了後に再起動してインストール
 ipcMain.on('update-install', () => {
   autoUpdater.quitAndInstall()
 })
@@ -191,9 +225,6 @@ app.whenReady().then(() => {
   startBackend()
   if (!IS_DEV) startStaticServer()
   createWindow()
-
-  // ウィンドウ表示後に少し待ってからアップデート確認
-  setTimeout(() => checkForUpdate(), 3000)
 })
 
 app.on('window-all-closed', () => {
