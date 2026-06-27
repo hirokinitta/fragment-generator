@@ -18,7 +18,8 @@
     "publish": {
       "provider": "github",
       "owner": "hirokinitta",
-      "repo": "fragment-generator"
+      "repo": "fragment-generator",
+      "releaseType": "release"
     },
     "files": [
       "app/**/*",
