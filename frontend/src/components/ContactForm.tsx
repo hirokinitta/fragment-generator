@@ -4,9 +4,9 @@ import styles from './ContactForm.module.css'
 // ── EmailJS 設定 ──────────────────────────────────────────────────────────────
 // EmailJS (https://www.emailjs.com/) で取得した値を設定してください
 // 無料プランで月200通まで送信可能
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID'   // ← EmailJSのService ID
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'  // ← EmailJSのTemplate ID
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY'   // ← EmailJSのPublic Key
+const EMAILJS_SERVICE_ID  = 'service_d5mxmfh'   // ← EmailJSのService ID
+const EMAILJS_TEMPLATE_ID = 'template_wx24gas'  // ← EmailJSのTemplate ID
+const EMAILJS_PUBLIC_KEY  = 'sSOFOjmTVpfM08Q85'   // ← EmailJSのPublic Key
 
 type Category = 'bug' | 'feature' | 'word' | 'other'
 
