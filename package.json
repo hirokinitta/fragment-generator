@@ -6,7 +6,7 @@
   "main": "app/main.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder --win --x64",
+    "build": "electron-builder --win --x64 --publish always",
     "pack": "electron-builder --dir"
   },
   "build": {
