@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useOnline } from '../pages/_app'
 import styles from './ContactForm.module.css'
 
-const EMAILJS_SERVICE_ID  = 'service_d5mxmfh'
+const EMAILJS_SERVICE_ID  = 'service_1e6jpj5'
 const EMAILJS_TEMPLATE_ID = 'template_wx24gas'
 const EMAILJS_PUBLIC_KEY  = 'sSOFOjmTVpfM08Q85'
 
