@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useTheme } from '../pages/_app'
+import { useTheme, useOnline } from '../pages/_app'
 import { useUpdater } from '../hooks/useUpdater'
 import styles from './TitleBar.module.css'
 
@@ -63,7 +63,6 @@ const STATIC_NOTICES: Notice[] = [
   },
 ]
 
-// ── アップデートモーダル ───────────────────────────────────────────────────────
 function UpdateModal({
   info, state, progress, error, onConfirm, onDismiss,
 }: {
@@ -80,20 +79,17 @@ function UpdateModal({
         <div className={styles.modalHeader}>
           <span className={styles.modalTitle}>// UPDATE_AVAILABLE</span>
         </div>
-
         <div className={styles.modalBody}>
           <div className={styles.modalVersionRow}>
             <span className={styles.modalVerOld}>v{info.currentVersion}</span>
             <span className={styles.modalArrow}>→</span>
             <span className={styles.modalVerNew}>v{info.latestVersion}</span>
           </div>
-
           <div className={styles.modalUpdateType}>
             <span className={styles.hotUpdateBadge}>
               ✓ ダウンロード後に再起動して更新します
             </span>
           </div>
-
           {info.releaseNotes && (
             <div className={styles.modalNotes}>
               <span className={styles.modalNotesLabel}>更新内容</span>
@@ -103,8 +99,6 @@ function UpdateModal({
               </p>
             </div>
           )}
-
-          {/* ダウンロード中 */}
           {state === 'downloading' && (
             <div className={styles.progressWrap}>
               <div className={styles.progressTrack}>
@@ -113,16 +107,11 @@ function UpdateModal({
               <span className={styles.progressLabel}>ダウンロード中... {progress}%</span>
             </div>
           )}
-
-          {/* ダウンロード完了 */}
           {state === 'downloaded' && (
             <p className={styles.progressLabel}>✓ ダウンロード完了。再起動して更新できます。</p>
           )}
-
-          {/* エラー */}
           {error && <p className={styles.modalError}>⚠ {error}</p>}
         </div>
-
         <div className={styles.modalFooter}>
           {state === 'available' && (
             <>
@@ -148,9 +137,9 @@ function UpdateModal({
   )
 }
 
-// ── TitleBar 本体 ─────────────────────────────────────────────────────────────
 export default function TitleBar() {
-  const { theme, toggle } = useTheme()
+  const { theme, toggle }  = useTheme()
+  const isOnline           = useOnline()
   const { updateInfo, updateState, progress, errorMsg, confirm, dismiss } = useUpdater()
 
   const [mounted,       setMounted]       = useState(false)
@@ -159,7 +148,6 @@ export default function TitleBar() {
   const [notices,       setNotices]       = useState<Notice[]>(STATIC_NOTICES)
   const [readIds,       setReadIds]       = useState<Set<string>>(new Set())
   const [modalOpen,     setModalOpen]     = useState(false)
-  const [isOnline,      setIsOnline]      = useState(false)
   const [onlineError,   setOnlineError]   = useState<string | null>(null)
   const [onlineLoading, setOnlineLoading] = useState(false)
 
@@ -168,28 +156,24 @@ export default function TitleBar() {
   useEffect(() => {
     setMounted(true)
     setIsElectron(!!window.electron)
-
     const saved = localStorage.getItem('fg-read-notices')
     if (saved) setReadIds(new Set(JSON.parse(saved)))
 
     if (!window.electron) return
 
-    window.electron.getOnlineMode().then(setIsOnline)
-
-    window.electron.onOnlineModeChanged(({ isOnline }) => {
-      setIsOnline(isOnline)
-      setOnlineLoading(false)
-      setOnlineError(null)
-    })
-
+    // onOnlineModeChanged は _app.tsx に移したのでここではエラーのみ
     window.electron.onOnlineModeError(({ message }) => {
       setOnlineError(message)
       setOnlineLoading(false)
       setTimeout(() => setOnlineError(null), 4000)
     })
+
+    // オンラインモード切り替え完了時にloadingを解除
+    window.electron.onOnlineModeChanged(() => {
+      setOnlineLoading(false)
+    })
   }, [])
 
-  // アップデート通知をお知らせに追加・モーダルを自動表示
   useEffect(() => {
     if (!updateInfo) return
     const notice: Notice = {
@@ -204,12 +188,10 @@ export default function TitleBar() {
     setModalOpen(true)
   }, [updateInfo])
 
-  // ダウンロード完了時もモーダルを開く（バックグラウンド続行から戻る場合）
   useEffect(() => {
     if (updateState === 'downloaded') setModalOpen(true)
   }, [updateState])
 
-  // パネル外クリックで閉じる
   useEffect(() => {
     if (!bellOpen) return
     const handler = (e: MouseEvent) => {
@@ -240,14 +222,10 @@ export default function TitleBar() {
     window.electron.setOnlineMode(!isOnline)
   }
 
-  const handleConfirm = () => {
-    confirm()
-    // downloadingに入ったらモーダルは開いたままにする
-  }
+  const handleConfirm = () => { confirm() }
 
   const handleDismiss = () => {
     setModalOpen(false)
-    // downloaded状態のときはdismissしない（再起動はいつでもできる）
     if (updateState !== 'downloaded') dismiss()
   }
 
@@ -266,7 +244,6 @@ export default function TitleBar() {
           </button>
         )}
 
-        {/* オンライン/オフラインスイッチ */}
         {mounted && isElectron && (
           <div className={styles.onlineWrap}>
             <button
@@ -284,7 +261,6 @@ export default function TitleBar() {
           </div>
         )}
 
-        {/* ベルアイコン */}
         {mounted && (
           <div className={styles.bellWrap} ref={panelRef}>
             <button className={styles.bellBtn} onClick={openBell} title="お知らせ">
@@ -341,7 +317,6 @@ export default function TitleBar() {
         )}
       </div>
 
-      {/* アップデートモーダル */}
       {modalOpen && updateInfo &&
         (updateState === 'available' || updateState === 'downloading' ||
          updateState === 'downloaded' || updateState === 'error') && (

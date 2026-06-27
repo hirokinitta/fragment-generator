@@ -1,12 +1,10 @@
 import { useState } from 'react'
+import { useOnline } from '../pages/_app'
 import styles from './ContactForm.module.css'
 
-// ── EmailJS 設定 ──────────────────────────────────────────────────────────────
-// EmailJS (https://www.emailjs.com/) で取得した値を設定してください
-// 無料プランで月200通まで送信可能
-const EMAILJS_SERVICE_ID  = 'service_d5mxmfh'   // ← EmailJSのService ID
-const EMAILJS_TEMPLATE_ID = 'template_wx24gas'  // ← EmailJSのTemplate ID
-const EMAILJS_PUBLIC_KEY  = 'sSOFOjmTVpfM08Q85'   // ← EmailJSのPublic Key
+const EMAILJS_SERVICE_ID  = 'service_d5mxmfh'
+const EMAILJS_TEMPLATE_ID = 'template_wx24gas'
+const EMAILJS_PUBLIC_KEY  = 'sSOFOjmTVpfM08Q85'
 
 type Category = 'bug' | 'feature' | 'word' | 'other'
 
@@ -17,7 +15,6 @@ const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'other',   label: 'その他' },
 ]
 
-// EmailJS をCDN経由で動的にロード（bundle sizeを増やさない）
 async function loadEmailJS() {
   if ((window as any).emailjs) return (window as any).emailjs
   await new Promise<void>((resolve, reject) => {
@@ -32,6 +29,8 @@ async function loadEmailJS() {
 }
 
 export default function ContactForm() {
+  const isOnline = useOnline()
+
   const [category, setCategory] = useState<Category>('bug')
   const [name,     setName]     = useState('')
   const [body,     setBody]     = useState('')
@@ -39,6 +38,10 @@ export default function ContactForm() {
   const [error,    setError]    = useState('')
 
   const handleSubmit = async () => {
+    if (!isOnline) {
+      setError('送信にはオンラインモードが必要です。右上の OFFLINE ボタンをクリックしてください。')
+      return
+    }
     if (!body.trim()) {
       setError('内容を入力してください')
       return
@@ -77,7 +80,13 @@ export default function ContactForm() {
         <span className={styles.note}>送信先: locaminase666@gmail.com</span>
       </div>
 
-      {/* 送信完了 */}
+      {/* オフライン警告 */}
+      {!isOnline && (
+        <div className={styles.offlineBanner}>
+          ⚠ 送信にはオンラインモードが必要です。右上の OFFLINE ボタンをクリックしてください。
+        </div>
+      )}
+
       {status === 'sent' && (
         <div className={styles.sentBanner}>
           ✓ 送信しました。フィードバックありがとうございます。
@@ -89,7 +98,6 @@ export default function ContactForm() {
 
       {status !== 'sent' && (
         <>
-          {/* カテゴリ */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>CATEGORY</span>
             <div className={styles.categories}>
@@ -105,7 +113,6 @@ export default function ContactForm() {
             </div>
           </div>
 
-          {/* 名前（任意） */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>NAME（任意）</span>
             <input
@@ -118,7 +125,6 @@ export default function ContactForm() {
             />
           </div>
 
-          {/* 本文 */}
           <div className={styles.field}>
             <span className={styles.fieldLabel}>CONTENT</span>
             <textarea
@@ -141,11 +147,9 @@ export default function ContactForm() {
           <button
             className={`${styles.submitBtn} ${status === 'sending' ? styles.submitSending : ''}`}
             onClick={handleSubmit}
-            disabled={status === 'sending'}
+            disabled={status === 'sending' || !isOnline}
           >
-            {status === 'sending'
-              ? 'SENDING...'
-              : '[ SEND ]'}
+            {status === 'sending' ? 'SENDING...' : '[ SEND ]'}
           </button>
         </>
       )}

@@ -104,3 +104,14 @@
   align-self: flex-start;
 }
 .sentReset:hover { color: var(--text); border-color: var(--text-dim); }
+
+/* オフライン警告バナー */
+.offlineBanner {
+  padding: 10px 14px;
+  border: 1px solid var(--danger-border);
+  border-radius: 3px;
+  background: var(--danger-bg);
+  font-size: 12px;
+  color: var(--danger);
+  line-height: 1.6;
+}
