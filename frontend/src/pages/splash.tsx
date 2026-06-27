@@ -14,10 +14,6 @@ const APP_TITLE = 'FRAGMENT_GENERATOR'
 const APP_SUB   = '記憶断片生成器'
 const [version, setVersion] = useState('')
 
-useEffect(() => {
-  window.electron?.getVersion().then(v => setVersion(v))
-}, [])
-
 export default function Splash() {
   const router = useRouter()
   const [phase,          setPhase]          = useState<Phase>('icon')
@@ -25,6 +21,10 @@ export default function Splash() {
   const [displayedSub,   setDisplayedSub]   = useState('')
   const [canClick,       setCanClick]        = useState(false)
   const [windowWidth,    setWindowWidth]    = useState(0)
+
+  useEffect(() => {
+    window.electron?.getVersion().then(v => setVersion(v))
+  }, [])
 
   // ── デバイスごとのサイズ計算 ──────────────────────────────────────────────
   useEffect(() => {
