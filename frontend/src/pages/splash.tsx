@@ -12,7 +12,6 @@ type Phase = 'icon' | 'iconFadeOut' | 'title' | 'ready'
 
 const APP_TITLE = 'FRAGMENT_GENERATOR'
 const APP_SUB   = '記憶断片生成器'
-const [version, setVersion] = useState('')
 
 export default function Splash() {
   const router = useRouter()
@@ -21,6 +20,7 @@ export default function Splash() {
   const [displayedSub,   setDisplayedSub]   = useState('')
   const [canClick,       setCanClick]        = useState(false)
   const [windowWidth,    setWindowWidth]    = useState(0)
+  const [version, setVersion] = useState('')
 
   useEffect(() => {
     window.electron?.getVersion().then(v => setVersion(v))
