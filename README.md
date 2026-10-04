@@ -134,7 +134,7 @@ C:\Users\[ユーザー名]\AppData\Roaming\fragment-generator\fragments.db
 アプリ内 **CONTACTタブ** からフィードバックのテキストを作成できます。
 コピーしたテキストを以下までお送りください。
 
-📩 **[連絡先をここに記入]**
+📩 **[locaminase666@gmail.com]**
 
 ---
 
