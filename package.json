@@ -1,12 +1,12 @@
 {
   "name": "fragment-generator",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "記憶断片生成器",
   "author": "hirokinitta",
   "main": "app/main.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder --win --x64 --publish always",
+    "build": "electron-builder --win --x64",
     "pack": "electron-builder --dir"
   },
   "build": {
@@ -52,6 +52,7 @@
     }
   },
   "dependencies": {
+    "adm-zip": "^0.6.1",
     "electron-log": "^5.0.0",
     "electron-updater": "^6.8.9"
   },
