@@ -42,8 +42,6 @@
         }
       ],
       "icon": "assets/icon.ico"
-      // 証明書がない場合は以下を有効化
-      // "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
