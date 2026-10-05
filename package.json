@@ -6,7 +6,8 @@
   "main": "app/main.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder --win --x64",
+    "build": "electron-builder --win --x64 --publish never",
+    "dist": "electron-builder --win --x64 --publish always",
     "pack": "electron-builder --dir"
   },
   "build": {
@@ -31,16 +32,18 @@
         "to": "backend.exe"
       }
     ],
+    "asar": true,
+    "generateUpdatesFilesForAllChannels": true,
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
       "icon": "assets/icon.ico"
+      // 証明書がない場合は以下を有効化
+      // "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,

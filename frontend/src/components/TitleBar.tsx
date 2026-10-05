@@ -27,6 +27,13 @@ const STATIC_NOTICES: Notice[] = [
     isNew: true,
   },
   {
+    id:    'rel-006',
+    title: 'v0.1.6: 語彙を増やしました',
+    body:  '語彙を増やしました。より多彩な断片が生成されるようになっています。',
+    date:  '2026-10-05',
+    isNew: true,
+  },
+  {
     id:    'rel-005',
     title: 'v0.1.5: バージョン表示を動的にする',
     body:  'バージョン表示を動的に表示するようにしました',
