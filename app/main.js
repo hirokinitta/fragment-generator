@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+﻿const { app, BrowserWindow, ipcMain } = require('electron')
 const { autoUpdater }  = require('electron-updater')
 const log              = require('electron-log')
 const { spawn }        = require('child_process')
@@ -8,7 +8,7 @@ const https            = require('https')
 const http             = require('http')
 
 // ── 設定 ─────────────────────────────────────────────────────────────────────
-const CURRENT_VERSION = app.getVersion()
+const CURRENT_VERSION = '0.1.6'
 const BACKEND_PORT    = 8765
 const FRONTEND_PORT   = 8766
 const IS_DEV          = process.env.NODE_ENV === 'development'
@@ -18,7 +18,7 @@ let backendProc  = null
 let staticServer = null
 let isOnlineMode = false
 
-// ── electron-updater 設定 ────────────────────────────────────────────────────
+// ── electron-updater 設宁E────────────────────────────────────────────────────
 autoUpdater.logger = log
 autoUpdater.logger.transports.file.level = 'info'
 autoUpdater.autoDownload = false         // ユーザーが確認してからDL
